@@ -1,0 +1,15 @@
+{
+    "name" : "Robin",
+    "age" : 29,
+    "hobbies" : [
+        "stealing",
+        "archery",
+        "philanthropy"
+    ],
+    "is_handsome" : true,
+    "merry_men" : {
+        "Lttle John",
+        "Much the Miller's Son",
+        "Friar Tuck"
+    }
+}

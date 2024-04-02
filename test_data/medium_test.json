@@ -1,0 +1,24 @@
+{
+    "name" : "Bob",
+    "age" : 30,
+    "hobbies" : [
+        "climbing",
+        "mountain biking",
+        "sleeping"
+    ],
+    "pets" : {
+        "cat" : "Mr. Miffles",
+        "dog" : "Megatron",
+        "mouse" : {
+            "name" : "Meistro",
+            "age" : 10,
+            "tic-tac-toe" : [
+                [ 0, 1, 2],
+                [ "x", 3.14, {
+                    "sunk" : [ "battleship", "patrol boat"]
+                }]
+            ]
+        }
+    },
+    "avogadro": 6.022e23
+}

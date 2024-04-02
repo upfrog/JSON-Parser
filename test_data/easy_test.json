@@ -1,0 +1,10 @@
+{
+    "name" : "Robin",
+    "age" : 29,
+    "hobbies" : [
+        "larceny    ",
+        "archery",
+        "philanthropy"
+    ],
+    "is_handsome" : true
+}

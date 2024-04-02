@@ -1,0 +1,11 @@
+{
+    "name" : "Robin",
+    "age" : 29,
+    "hobbies" : [
+        "stealing",
+        "archery",
+        "philanthropy"
+    ],
+    "is_handsome" : true,
+    "a_complex" :  1+2i
+}
