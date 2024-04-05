@@ -13,7 +13,13 @@ YOUR_NAME_HERE = "Stephen Rout"
 '''
 GRAMMAR:
 
+DRAFT IV:
 
+S -> {C}
+C -> str : D
+D -> (L||S||str||num) E
+L -> [D]
+E -> (,D)|| , || episol
 
 '''
 
@@ -99,16 +105,6 @@ def find_end(content: str) -> int:
         raise RuntimeError
         
         
-        
-
-'''
-
-3 cases
--true/false
--quotation marks
-number
-'''
-
 
 def tokenize(content: str) -> list:
     i = 0
@@ -132,34 +128,112 @@ def tokenize(content: str) -> list:
     return tokenized
 
 
+
+def parse_s(tokenized: list, parsed: list, i: int) -> dict:
+    c = tokenized[i]
+
+    if c == "{":
+        match{"{"}
+
+
+def match(cur_token: str, target: str) -> bool:
+    if cur_token == target:
+        return True
+
+
+def add(parsed: list, c: str) -> dict:
+    pass
+
+
+def parse(tokenized: list, parsed: list, i: int) -> dict:
+    c = tokenized[i]
+
+    if is_name(c) == True:
+        #add name
+        #add colon???
+        #add value OR container
+    else if is_container(c) == True:
+        pass
+
+
+
+
+
+
+
+
+    return parsed
+
+
+'''
+parse_A = name (string?)
+    NAME CONTENT
+
+    CONTENT -> CONTAINER OR STRING OR NUM
+
+    for STRING or NUM, check if the next non-comma char is container closer
+
+parse_b = container (list or dict) OR val 
+parse_c = num
+parse_d = ","
+ 
+
+Fundamentally, this is about reading every single character in the input. With each character, we do one of two things: create
+predictions about what future characters will be, or confirm past predictions. We must never predict wrong, which is why it's 
+important to cover every single input character.
+
+If we come across a colon, we know that the next token should NOT be a close brace, but it can be essentially anything else (can it 
+be an a single comma?). So we parse the next piece knowing, knowing that it will be one of a set of things - lets call it data. Data
+can take on many forms. We do not know which form it will take on, but we know that it will take on one of these forms. So our data
+method must be able to handle any of these forms. It will take the next token, and it will determine the type of data. .
+
+'''
+
+
+def parse_dict(tokenized: list, parsed: dict, i: int) -> dict:
+    dict = {}
+
+
+
+
+
+
 def parse_file(file_name: str) -> dict:
     #content = ""
     #access the file and get contents
     with open(file_name) as file:
         content = file.read()
 
-    print(tokenize(content))
+    tokenized = tokenize(content)
+    print(tokenized)
 
+    #parsed = {}
+    parsed = parse(tokenized, parsed, 0)
+    print(parsed)
+
+
+
+
+
+
+'''
+TOOD:
+    - Figure out grammar
+    - Implement grammar
+    - Clean code - be sure to add some more failure handling!
 
     
+need 2-token look-ahead (see attribtue name, look past ":", see folling token)
+    -if [       -> list
+    -if string, -> string
+    -f num      -> num
 
 
-
-    #print(content)
-    #pass
-        
-
-
-
-'''
-Tokenization methods:
-    - have a single index variable to act as a pointer. It will either point to something that 
-    is a single-character token, or it will point to an indicator that we must tokenize a range of
-    characters. If the latter, get a second pointer, and explore from there to find the end
-    -Aggressively use methods strip and split
+If the first symbol is:
+    -"STRING"   -> (Preapre to) Add string as name
+    -
 
 '''
-
 
 
 
