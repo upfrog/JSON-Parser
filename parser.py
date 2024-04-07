@@ -15,11 +15,14 @@ GRAMMAR:
 
 DRAFT IV:
 
-S -> {C}
-C -> str : D
-D -> (L||S||str||num) E
-L -> [D]
-E -> (,D)|| , || episol
+Start/dict      S -> {C}
+Content         C -> str : D
+Data            D -> (L||S||str||num) E
+List            L -> [D]
+End             E -> (,D)|| , || episol
+
+Not 100% corrent; data within lists has different rules for commas.
+
 
 '''
 
@@ -135,18 +138,63 @@ def parse_s(tokenized: list, parsed: list, i: int) -> dict:
     if c == "{":
         match{"{"}
 
-
+'''
 def match(cur_token: str, target: str) -> bool:
     if cur_token == target:
         return True
+'''
+
+
+'''
+Checks that a name is correctly formatted.
+
+Do I need to check for additional quotation marks in the name?
+
+'''
+def match_name(c: str) -> str:
+
+    #Checks that name is surrounded by "", annd that it has content
+    if c[0] == "\"" and c[-1] == "\"" and len(c) > 2:
+        return c
+    else:
+        raise Exception("Error: Key is incorrectly formatted")
+
+
+def match_generic(c: str, target: str) -> str:
+    if c == target:
+        return c
+    else:
+        raise Exception("Error: Expected " + target + ", got " + c + ".")
 
 
 def add(parsed: list, c: str) -> dict:
     pass
 
 
+def parse_val(tokenized: list):
+
+    #dostuff
+    return (val, 8)
+
+
 def parse(tokenized: list, parsed: list, i: int) -> dict:
-    c = tokenized[i]
+    while i < len(tokenized):
+        #If it's a name-value pair
+        
+        key = match_name(tokenized[i])
+        match_generic(tokenized[i+1], ":")
+        parse_result = parse_val(tokenized[i+2])
+        
+        val = parse_result[0]
+        i += parse_result[1]
+
+        parsed[key] = val
+    
+    
+    
+    
+    
+    '''c = tokenized[i]
 
     if is_name(c) == True:
         #add name
@@ -154,7 +202,7 @@ def parse(tokenized: list, parsed: list, i: int) -> dict:
         #add value OR container
     else if is_container(c) == True:
         pass
-
+'''
 
 
 
@@ -207,8 +255,8 @@ def parse_file(file_name: str) -> dict:
     tokenized = tokenize(content)
     print(tokenized)
 
-    #parsed = {}
-    parsed = parse(tokenized, parsed, 0)
+    parsed = {}
+    parsed = parse(tokenized[1:], parsed, 0)
     print(parsed)
 
 
