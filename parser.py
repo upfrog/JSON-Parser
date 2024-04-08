@@ -202,6 +202,17 @@ def match_comma(token: str) -> bool:
 
 
 '''
+Any content wrapped in quotation marks can be a String
+'''
+def match_string(token: str) -> str:
+    if token[0] == "\"" and token[-1] == "\"":
+        return True
+    
+
+def match_list(tokenized: list, i: int) -> list:
+    pass
+
+'''
 Takes in the list of tokens, and a start location, then parses to the end of the dictionary.
 
 '''
@@ -219,6 +230,9 @@ def parse_dict(tokenized: list, i: int) -> tuple:
 
 '''
 Takes a string number as input, and returns it as an into or a float.
+
+Might be better handled by try-catching conversions - I understand that 
+"ask forgiveness, not permission" is pythonic.
 '''
 def parse_num(token: str):
     num = num[1:-1] #strip quotation marks
@@ -231,6 +245,27 @@ def parse_num(token: str):
 
     return parsed_num
 
+'''
+Relies on parse_num().
+
+Initially I wanted to independently code this, to reduce my constraints for ordering
+functions, but I decided that it was better to rely on Python's in-built type
+compatibility checking, than jury-rigging my own.
+'''
+def match_num(token: str) -> bool:
+    try:
+        parse_num(token)
+    except:
+        return False
+    else:
+        return True
+
+
+'''
+Not much to do here, but the wrapper keeps consistency
+'''
+def parse_string(token: str) -> str:
+    return token
 
 '''
 Should this maybe be parse_dict?
@@ -257,6 +292,7 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
             if match_num(token):
                 value = parse_num(token)
                 i += 3
+            #Check this after num; any number can be a string, but not vice versa     
             elif match_string(token):
                 value = parse_string(token)
                 i += 3
@@ -419,3 +455,15 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+'''
+TODO:
+Figure out how to handle matching the list (probably should do the same
+thing you do for dicts, just for consistency. COnsider implementing a
+2-sided match function?)
+Implement match_list()
+Implement parse_list()
+Test!
+Extend!
+
+'''
