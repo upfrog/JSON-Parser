@@ -130,7 +130,7 @@ def tokenize(content: str) -> list:
 
     return tokenized
 
-
+'''
 
 def parse_s(tokenized: list, parsed: list, i: int) -> dict:
     c = tokenized[i]
@@ -138,7 +138,7 @@ def parse_s(tokenized: list, parsed: list, i: int) -> dict:
     if c == "{":
         match{"{"}
 
-'''
+
 def match(cur_token: str, target: str) -> bool:
     if cur_token == target:
         return True
@@ -160,9 +160,15 @@ def match_name(c: str) -> str:
         raise Exception("Error: Key is incorrectly formatted")
 
 
-def match_generic(c: str, target: str) -> str:
+'''
+A more flexible matching tool for doing simple checks.
+
+Because none of these will be directly added to the final dictionary, it does not
+need to return the matched value.
+'''
+def match_generic(c: str, target: str) -> bool:
     if c == target:
-        return c
+        return True
     else:
         raise Exception("Error: Expected " + target + ", got " + c + ".")
 
@@ -170,29 +176,139 @@ def match_generic(c: str, target: str) -> str:
 def add(parsed: list, c: str) -> dict:
     pass
 
+'''
+def parse_content(tokenized: list, i: int):
+    #is the content an int?
 
-def parse_val(tokenized: list):
+    #is the content a strin?
 
+    #is the content a dict?
     #dostuff
-    return (val, 8)
+    return (3, 8)
+'''
 
 
-def parse(tokenized: list, parsed: list, i: int) -> dict:
-    while i < len(tokenized):
-        #If it's a name-value pair
-        
-        key = match_name(tokenized[i])
-        match_generic(tokenized[i+1], ":")
-        parse_result = parse_val(tokenized[i+2])
-        
-        val = parse_result[0]
-        i += parse_result[1]
+'''
+These functions are technically unnecesary, but I think it is clearer than directly using
+match_generic().
 
-        parsed[key] = val
+'''
+def match_dict(token: str) -> bool:
+    return match_generic(token, "{")
+
+
+def match_comma(token: str) -> bool:
+    return match_generic(token, ",")
+
+
+'''
+Takes in the list of tokens, and a start location, then parses to the end of the dictionary.
+
+'''
+def parse_dict(tokenized: list, i: int) -> tuple:
+    
+    new_dict = {}
+    parsed = parse_entries(tokenized, new_dict, i)
+    #probably isn't necesary to ensure that the dict is closed, since we find the index
+    #of the "}"
+    match_generic(parsed[0][i], "}")
+    
+
+
+    return {}
+
+'''
+Takes a string number as input, and returns it as an into or a float.
+'''
+def parse_num(token: str):
+    num = num[1:-1] #strip quotation marks
+    parsed_num = None
+
+    if num.contains("."):
+        parsed_num = float(num)
+    else:
+        parsed_num = int(num)
+
+    return parsed_num
+
+
+'''
+Should this maybe be parse_dict?
+
+Parses all the entries at a given level of dictionary
+'''
+def parse_entries(tokenized: list, parsed: tuple) -> tuple:
+    parsed_dict = parsed[0]
+    i = parsed[1]
+
+    #Find the end of the current dict, and parse to it. Each loop parses a key-value pair.
+    try: 
+        parse_extent = tokenized[i:].index("}")
+    except:
+        raise Exception("Error: Dictionary is not closed")
+    else:
+        while i < parse_extent:
+            #Consider replacing this all with parse_value
+            key = match_name(tokenized[i])
+            match_generic(tokenized[i+1], ":")
+            token = tokenized[i+2]
+            value = None
+
+            if match_num(token):
+                value = parse_num(token)
+                i += 3
+            elif match_string(token):
+                value = parse_string(token)
+                i += 3
+            elif match_list(token):
+                parse_result = parse_list(token, i+3)
+                value = parse_result[0]
+                i += parse_result[1]
+            elif match_dict(token):
+                parse_result = parse_dict(tokenized, i+3)
+                value = parse_result[0]
+                i += parse_result[1]
+
+            match_comma(tokenized[i])
+            i += 1
+
+            match_generic("}")
+
+        parsed_dict[key] = value
+
+    return (parsed_dict, i)
+
+
+    '''
+    #Check that a top-level dictionary is being made properly
+    #if match_generic(tokenized[0], "{") == True:
+
+    
+        #should it be until i = the index of the next } instead?    
+        while i < len(tokenized):
+            #If it's a name-value pair
+            
+            key = match_name(tokenized[i])
+            match_generic(tokenized[i+1], ":")
+            parse_result = parse_content(tokenized[], i+2)
+            
+            val = parse_result[0]
+            i += parse_result[1]
+
+            parsed[key] = val
+    else:
+        raise Exception("Error: Dictionary is missing an opening \"{\".")
+    
+    if match_generic(tokenized[i], "}"):
+        return parsed
+    else:
+        raise Exception("Dictionary is missing a closing \"}\".")
+        '''
     
     
     
-    
+
+    #Make a parse_first method to handle making a dictionary with no name
     
     '''c = tokenized[i]
 
@@ -204,13 +320,7 @@ def parse(tokenized: list, parsed: list, i: int) -> dict:
         pass
 '''
 
-
-
-
-
-
-
-    return parsed
+    
 
 
 '''
@@ -238,8 +348,11 @@ method must be able to handle any of these forms. It will take the next token, a
 '''
 
 
-def parse_dict(tokenized: list, parsed: dict, i: int) -> dict:
-    dict = {}
+def parse(tokenized: list) -> dict:
+    if match_generic(tokenized[0], "{") == True:
+        parsed = ({}, 1)
+        return parse_entries(parsed)
+        
 
 
 
@@ -255,8 +368,8 @@ def parse_file(file_name: str) -> dict:
     tokenized = tokenize(content)
     print(tokenized)
 
-    parsed = {}
-    parsed = parse(tokenized[1:], parsed, 0)
+    #parsed = {}
+    parsed = parse(tokenized)
     print(parsed)
 
 

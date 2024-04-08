@@ -5,10 +5,7 @@ def parse(myDict):
 
 
 def main():
-    myDict = {}
-    print("hllo")
-    print(parse(myDict))
-
+    print([3,5,6])
 
 if __name__ == "__main__":
     main()
