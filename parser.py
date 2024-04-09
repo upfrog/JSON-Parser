@@ -209,8 +209,65 @@ def match_string(token: str) -> str:
         return True
     
 
-def match_list(tokenized: list, i: int) -> list:
-    pass
+def match_list(token) -> list:
+    if match_generic(token, "["):
+        return True
+    
+
+'''
+Identifies the type of value in a list, and parses it as appropriate
+
+This is a poor solution. It is almost identical to parse_dict_value() - the only
+difference is how i is incremented.
+
+I hope that I'll have time to fix this, but it works.
+'''
+def parse_list_value(tokenized: list, i: int):
+    token = tokenized[i]
+    value = None
+
+    if match_num(token):
+        value = parse_num(token)
+        i += 1
+    #Check this after num; any number can be a string, but not vice versa     
+    elif match_string(token):
+        value = parse_string(token)
+        i += 1
+    #Lists and dicts involve parsing multiple values, so we pass the list of tokens
+    elif match_list(token):
+        parse_result = parse_list(tokenized, i+3)
+        value = parse_result[0]
+        i = parse_result[1]
+    elif match_dict(token):
+        parse_result = parse_dict(tokenized, i+3)
+        value = parse_result[0]
+        i = parse_result[1]
+    else:
+        raise Exception("Error: list value is invalid")
+    
+    return (value, i)
+    
+
+def parse_list(tokenized: list, i: int) -> list:
+    new_list = []
+
+    #if the list is empty
+    if tokenized[i] == "]":
+        return new_list
+
+    #Given that the list has at least one entry, it can only be closed after an entry.
+    while i < len(tokenized):
+        parse_result = parse_list_value(tokenized, i)
+        new_list.append(parse_result[0])
+        i = parse_result[1]
+        if match_comma(tokenized[i+1]):
+            i += 2
+        #only return the list if it's closed. If it never is, we throw an error.
+        elif match_generic(tokenized[i+1], "]") :
+            return new_list
+    
+    raise Exception("Error: list is not closed with a \"]\".") 
+
 
 '''
 Takes in the list of tokens, and a start location, then parses to the end of the dictionary.
@@ -219,14 +276,12 @@ Takes in the list of tokens, and a start location, then parses to the end of the
 def parse_dict(tokenized: list, i: int) -> tuple:
     
     new_dict = {}
-    parsed = parse_entries(tokenized, new_dict, i)
-    #probably isn't necesary to ensure that the dict is closed, since we find the index
-    #of the "}"
-    match_generic(parsed[0][i], "}")
-    
+    parsed_result = parse_entries(tokenized, (new_dict, i))
+    new_dict = parsed_result[0]
+    i = parsed_result[1]
+    match_generic(tokenized[i], "}")
 
-
-    return {}
+    return (new_dict, i)
 
 '''
 Takes a string number as input, and returns it as an into or a float.
@@ -260,6 +315,35 @@ def match_num(token: str) -> bool:
     else:
         return True
 
+'''
+PROBLEM: This increments i as if it's still parsing dict members
+'''
+def parse_dict_value(tokenized: list, i: int):
+    token = tokenized[i]
+    value = None
+
+    if match_num(token):
+        value = parse_num(token)
+        i += 3
+    #Check this after num; any number can be a string, but not vice versa     
+    elif match_string(token):
+        value = parse_string(token)
+        i += 3
+    #Lists and dicts involve parsing multiple values, so we pass the list of tokens
+    elif match_list(token):
+        parse_result = parse_list(tokenized, i+3)
+        value = parse_result[0]
+        i = parse_result[1]
+    elif match_dict(token):
+        parse_result = parse_dict(tokenized, i+3)
+        value = parse_result[0]
+        i = parse_result[1]
+    else:
+        raise Exception("Error: value associated with key \"" 
+                        + token +"\" is invalid.")
+    
+    return (value, i)
+
 
 '''
 Not much to do here, but the wrapper keeps consistency
@@ -268,8 +352,6 @@ def parse_string(token: str) -> str:
     return token
 
 '''
-Should this maybe be parse_dict?
-
 Parses all the entries at a given level of dictionary
 '''
 def parse_entries(tokenized: list, parsed: tuple) -> tuple:
@@ -283,34 +365,18 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
         raise Exception("Error: Dictionary is not closed")
     else:
         while i < parse_extent:
-            #Consider replacing this all with parse_value
             key = match_name(tokenized[i])
             match_generic(tokenized[i+1], ":")
-            token = tokenized[i+2]
+            i += 2 #sets i to the index of the key's value
             value = None
 
-            if match_num(token):
-                value = parse_num(token)
-                i += 3
-            #Check this after num; any number can be a string, but not vice versa     
-            elif match_string(token):
-                value = parse_string(token)
-                i += 3
-            elif match_list(token):
-                parse_result = parse_list(token, i+3)
-                value = parse_result[0]
-                i += parse_result[1]
-            elif match_dict(token):
-                parse_result = parse_dict(tokenized, i+3)
-                value = parse_result[0]
-                i += parse_result[1]
+            value_result = parse_dict_value(tokenized, i)
 
+            value = value_result[0]
+            i = value_result[1]
             match_comma(tokenized[i])
-            i += 1
 
-            match_generic("}")
-
-        parsed_dict[key] = value
+            parsed_dict[key] = value
 
     return (parsed_dict, i)
 
@@ -387,7 +453,7 @@ method must be able to handle any of these forms. It will take the next token, a
 def parse(tokenized: list) -> dict:
     if match_generic(tokenized[0], "{") == True:
         parsed = ({}, 1)
-        return parse_entries(parsed)
+        return parse_entries(tokenized, parsed)
         
 
 
