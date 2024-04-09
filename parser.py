@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+import copy
+
+
 DESCRIPTION = '''
 A homebrew JSON parser which extends standard JSON with sets and complex numbers.
 '''
@@ -157,7 +160,7 @@ def match_name(c: str) -> str:
     if c[0] == "\"" and c[-1] == "\"" and len(c) > 2:
         return c
     else:
-        raise Exception("Error: Key is incorrectly formatted")
+        raise Exception("Error: Key " + c + " is incorrectly formatted")
 
 
 '''
@@ -170,7 +173,8 @@ def match_generic(c: str, target: str) -> bool:
     if c == target:
         return True
     else:
-        raise Exception("Error: Expected " + target + ", got " + c + ".")
+        return False
+        #raise Exception("Error: Expected " + target + ", got " + c + ".")
 
 
 def add(parsed: list, c: str) -> dict:
@@ -214,6 +218,17 @@ def match_list(token) -> list:
         return True
     
 
+def match_bool(token: str) -> bool:
+    return (token == "true" or token == "false")
+
+
+def parse_bool(token: str) -> bool:
+    if token == "true":
+        return True
+    elif token == "false":
+        return False
+    
+
 '''
 Identifies the type of value in a list, and parses it as appropriate
 
@@ -225,10 +240,13 @@ I hope that I'll have time to fix this, but it works.
 def parse_list_value(tokenized: list, i: int):
     token = tokenized[i]
     value = None
-
+    #print(token)
     if match_num(token):
         value = parse_num(token)
         i += 1
+    elif match_bool(token):
+        value = parse_bool(token)
+        i += 1   
     #Check this after num; any number can be a string, but not vice versa     
     elif match_string(token):
         value = parse_string(token)
@@ -257,16 +275,20 @@ def parse_list(tokenized: list, i: int) -> list:
 
     #Given that the list has at least one entry, it can only be closed after an entry.
     while i < len(tokenized):
+        print("List token is: " + tokenized[i])
         parse_result = parse_list_value(tokenized, i)
         new_list.append(parse_result[0])
         i = parse_result[1]
-        if match_comma(tokenized[i+1]):
-            i += 2
+        if match_comma(tokenized[i]):
+            i += 1
         #only return the list if it's closed. If it never is, we throw an error.
-        elif match_generic(tokenized[i+1], "]") :
-            return new_list
+        elif match_generic(tokenized[i], "]") :
+            return (new_list, i+1)
     
     raise Exception("Error: list is not closed with a \"]\".") 
+
+
+
 
 
 '''
@@ -276,6 +298,10 @@ Takes in the list of tokens, and a start location, then parses to the end of the
 def parse_dict(tokenized: list, i: int) -> tuple:
     
     new_dict = {}
+    print("First dict val: " + tokenized[i])
+    print("in parse_dict, i = " + str(i))
+    print("in parse_dict, tokenized[i] = " + tokenized[i])
+
     parsed_result = parse_entries(tokenized, (new_dict, i))
     new_dict = parsed_result[0]
     i = parsed_result[1]
@@ -290,15 +316,18 @@ Might be better handled by try-catching conversions - I understand that
 "ask forgiveness, not permission" is pythonic.
 '''
 def parse_num(token: str):
-    num = num[1:-1] #strip quotation marks
+    num = token #num[1:-1] #strip quotation marks
     parsed_num = None
 
-    if num.contains("."):
-        parsed_num = float(num)
+    try:
+        if num.find(".") != -1:
+            parsed_num = float(num)
+        else:
+            parsed_num = int(num)
+    except:
+        raise Exception("Not a valid number.")
     else:
-        parsed_num = int(num)
-
-    return parsed_num
+        return parsed_num
 
 '''
 Relies on parse_num().
@@ -309,11 +338,28 @@ compatibility checking, than jury-rigging my own.
 '''
 def match_num(token: str) -> bool:
     try:
+        int(token)
+        return True
+    except:
+        try:
+            float(token)
+            return True
+        except:
+            return False
+    
+    #try
+    
+    #return type(token) == float or type(token) == int
+    
+    
+    '''try:
+        print("made it!")
         parse_num(token)
+        print("made it!")
     except:
         return False
     else:
-        return True
+        return True'''
 
 '''
 PROBLEM: This increments i as if it's still parsing dict members
@@ -322,20 +368,24 @@ def parse_dict_value(tokenized: list, i: int):
     token = tokenized[i]
     value = None
 
+    #print(type(int(token)))
     if match_num(token):
         value = parse_num(token)
-        i += 3
-    #Check this after num; any number can be a string, but not vice versa     
+        i += 1
+    #Check this after num; any number can be a string, but not vice versa
+    elif match_bool(token):
+        value = parse_bool(token)
+        i += 1     
     elif match_string(token):
         value = parse_string(token)
-        i += 3
+        i += 1
     #Lists and dicts involve parsing multiple values, so we pass the list of tokens
     elif match_list(token):
-        parse_result = parse_list(tokenized, i+3)
+        parse_result = parse_list(tokenized, i+1)
         value = parse_result[0]
         i = parse_result[1]
     elif match_dict(token):
-        parse_result = parse_dict(tokenized, i+3)
+        parse_result = parse_dict(tokenized, i+1)
         value = parse_result[0]
         i = parse_result[1]
     else:
@@ -355,16 +405,22 @@ def parse_string(token: str) -> str:
 Parses all the entries at a given level of dictionary
 '''
 def parse_entries(tokenized: list, parsed: tuple) -> tuple:
+    print("===============")
     parsed_dict = parsed[0]
-    i = parsed[1]
+    i = copy.deepcopy(parsed[1])
+    print("in parse_entries, i = " + str(i))
 
     #Find the end of the current dict, and parse to it. Each loop parses a key-value pair.
     try: 
         parse_extent = tokenized[i:].index("}")
+        #print("After trying, i = " + str(i))
     except:
         raise Exception("Error: Dictionary is not closed")
     else:
+        print("After else, i = " + str(i))
         while i < parse_extent:
+            print("In While: " + str(i))
+            print("Token: " + tokenized[i])
             key = match_name(tokenized[i])
             match_generic(tokenized[i+1], ":")
             i += 2 #sets i to the index of the key's value
@@ -374,9 +430,13 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
 
             value = value_result[0]
             i = value_result[1]
+            
             match_comma(tokenized[i])
+            i += 1
 
             parsed_dict[key] = value
+            #print(parsed_dict)
+            print("yo!")
 
     return (parsed_dict, i)
 
@@ -464,6 +524,7 @@ def parse(tokenized: list) -> dict:
 def parse_file(file_name: str) -> dict:
     #content = ""
     #access the file and get contents
+    print(file_name)
     with open(file_name) as file:
         content = file.read()
 
@@ -472,7 +533,7 @@ def parse_file(file_name: str) -> dict:
 
     #parsed = {}
     parsed = parse(tokenized)
-    print(parsed)
+    return(parsed[0])
 
 
 
@@ -505,14 +566,17 @@ If the first symbol is:
 #py parser.py test_data/$TEST_FILE_NAME.json
 
 def main():
+
     ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
     ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
     args = ap.parse_args()
+    
 
     file_name = args.file_name
     local_dir = os.path.dirname(__file__)
     file_path = os.path.join(local_dir, file_name)
 
+ 
     dictionary = parse_file(file_path)
 
     print('DICTIONARY:')
