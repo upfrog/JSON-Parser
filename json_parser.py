@@ -1,9 +1,7 @@
-
+#!/usr/bin/python3
 
 DESCRIPTION = '''
 A homebrew JSON parser which extends standard JSON with sets and complex numbers.
-
-#!/usr/bin/python3
 '''
 
 import argparse
@@ -12,17 +10,20 @@ import os.path
 YOUR_NAME_HERE = "Stephen Rout" 
 
 
-
 '''
 GRAMMAR:
 
-DRAFT IV:
+This is quite rough. It was useful for organizing my thoughts, especially since 
+it was illustrative for my problem statement and decomposision, but it is a long 
+ways from being mathematically rigorous.
+
+DRAFT IV++:
 
 Start/dict      S -> {C}
 Content         C -> str : D
-Data            D -> (L||S||str||num) E
+Data            D -> (L||S||SET||str||num||bool) E
 List            L -> [D]
-End             E -> (,D)|| , || episol
+Set           SET -> {num||str||bool||complex}
 
 Not 100% corrent; data within lists has different rules for commas.
 
@@ -32,10 +33,16 @@ the types, and I must checks for those types to parse_value functions
 
 EXTENSION:
 
+Data can now yield complex numbers or sets,
 
-
+SET -> {num||str||bool||complex}
 '''
 
+'''
+==========================================================
+==================TOKENIZING==============================
+==========================================================
+'''
 
 '''
 A function to check if a given character should be tokenized individually.
@@ -194,6 +201,8 @@ def match_dict(token: str) -> bool:
 '''
 Given the index of the first content token in a dictionary, parses that dictionary
 and it's contents.
+
+Represents S from the grammar
 '''
 def parse_dict(tokenized: list, i: int) -> tuple:
     
@@ -233,6 +242,8 @@ Because sets cannot contain multi-token structures, stuff
 
 The structure of the code is extremely similar to parse_list(). I wonder if there is
 some way to use this similarity to economize on code?
+
+Represent Set from the grammar.
 '''
 def parse_set(tokenized: list, i: int) -> tuple:
     new_set = set()
@@ -257,13 +268,15 @@ def parse_set(tokenized: list, i: int) -> tuple:
 
 
 '''
-Any content wrapped in quotation marks can be a String
+Any content wrapped in quotation marks can be a String.
 '''
 def match_string(token: str) -> bool:
     if token[0] == "\"" and token[-1] == "\"":
         return True
     
-
+'''
+Represents String from the grammar.
+'''
 def parse_string(token: str) -> str:
     if token == "\"\"":
         return ""
@@ -276,6 +289,8 @@ def match_list(token) -> list:
     
 '''
 Given the index of the first content token in a list, parses that list and it's contents.
+
+Represents L from the grammar.
 '''
 def parse_list(tokenized: list, i: int) -> tuple:
     new_list = []
@@ -380,6 +395,8 @@ The order of the if-statements could be important, since a boolean "true" or "fa
 could be read as a string - as could any number. This shouldn't matter, since my string
 matching relies on the presence of quoation marks, which shouldn't be present in numbers
 or booleans.
+
+Represents D from the grammar
 '''
 def parse_value(tokenized: list, i: int):
     token = tokenized[i]
@@ -397,7 +414,7 @@ def parse_value(tokenized: list, i: int):
     elif match_string(token):
         value = parse_string(token)
         i += 1
-    #Lists and dicts involve parsing multiple values, so we pass the list of tokens
+    #Lists, sets, and dicts involve parsing multiple values, so we pass the list of tokens
     elif match_set(tokenized, i):
         parse_result = parse_set(tokenized, i+1)
         value = parse_result[0]
@@ -407,7 +424,6 @@ def parse_value(tokenized: list, i: int):
         value = parse_result[0]
         i = parse_result[1]
     elif match_dict(token):
-        #print(i)
         parse_result = parse_dict(tokenized, i+1)
         value = parse_result[0]
         i = parse_result[1]
@@ -417,15 +433,10 @@ def parse_value(tokenized: list, i: int):
     
     return (value, i)
 
-
-
 '''
 Parses all the entries at a given level of dictionary.
 '''
 def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
-    #parsed_dict = parsed[0]
-    #i = parsed[1]
-    
     while tokenized[i] != "}":
         #Checks for a name and ":"
         key = parse_name(tokenized[i])
@@ -433,10 +444,10 @@ def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
             raise Exception("Input is missing \":\" sepperating key and value.")
         i += 2 
 
-        value_result = parse_value(tokenized, i)
+        parse_result = parse_value(tokenized, i)
 
-        value = value_result[0]
-        i = value_result[1]
+        value = parse_result[0]
+        i = parse_result[1]
 
         parsed[key] = value
 
@@ -447,7 +458,6 @@ def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
             raise Exception("Dictionary is not closed with a \"}\".")
         
     return (parsed, i)
-
 
 '''
 For convenience, we make the top-level dictionary here, and pass it into the rest of the
@@ -465,28 +475,45 @@ def parse_file(file_name: str) -> dict:
     else:
         raise Exception("Input does not start with a \"{\".")
 
+
+def run_tests(test_files: list) -> str:
+    TEST_DATA_LOCATION = "test_data"
+    for test in test_files:
+        try:
+            path = os.path.join(TEST_DATA_LOCATION, test)
+            print(parse_file(path))
+            print("\n\n=====================================================\n\n")
+        except:
+            raise Exception("Failed on file " + test)
+
 '''
 Proccesses command line input, and prints the final product.
+
+This has two modes: "command line" and "mass test". The former requires a command line
+parameter, consisting of the name of the input file. The latter will instead run the
+parser on all files in the designated directory - which directory is hardcoded in
+run_tests() as TEST_DATA_LOCATION.
 '''
 def main():
-    '''
-    ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
-    ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
-    args = ap.parse_args()
-    
+    mode = "command line"
 
-    file_name = args.file_name
-    local_dir = os.path.dirname(__file__)
-    file_path = os.path.join(local_dir, file_name)
-    '''
+    if mode == "command line":
+        ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
+        ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
+        args = ap.parse_args()
+        
+        file_name = args.file_name
+        local_dir = os.path.dirname(__file__)
+        file_path = os.path.join(local_dir, file_name)
 
-    file_path = "test_data/zEAJGG3UFh6tbqz4.json"
-    dictionary = parse_file(file_path)
+        dictionary = parse_file(file_path)
 
-    #dictionary = parse_file("test_data/medium_test.json")
+        print('DICTIONARY:')
+        print(dictionary)
 
-    print('DICTIONARY:')
-    print(dictionary)
+    elif mode == "mass test":
+        dir_list = os.listdir("test_data/")
+        run_tests(dir_list)
 
 
 if __name__ == '__main__':
