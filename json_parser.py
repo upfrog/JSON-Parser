@@ -27,6 +27,11 @@ Not 100% corrent; data within lists has different rules for commas.
 To expand to new types, I must add new methods for matching and parsing
 the types, and I must checks for those types to parse_value functions
 
+
+EXTENSION:
+
+
+
 '''
 
 
@@ -53,11 +58,10 @@ def is_divider(char: str) -> bool:
         return False
     
 '''
-A function to check if a given entry is a number.
+Checks if a given entry is a number, using a dictionary for O(1) lookup speed.
 
-This uses a dictionary for O(1) lookup speed.
-
-The relevance of ".", "-", and "+" prevent this from being a simple type check.
+There is probably a way to do this with python type conversion, but in this case
+this seemed simplest.
 '''
 def is_number(char: str) -> bool:
     num_dict = {
@@ -87,7 +91,7 @@ Returns the index which tokenize should split to.
 
 This only checks for numbers, strings, and booleans.
 
-For quotation marks we know the end of the split once we reach it, but for
+For quotation marks, we know the end of the split once we reach it, but for
 the other types, we only know the end index once we have passed it.
 '''
 def find_end(content: str) -> int:
@@ -172,6 +176,9 @@ def match_name(token: str) -> str:
     return token[0] == "\"" and token[-1] == "\"" and len(token) > 2
 
 
+def match_colon(token: str) -> bool:
+    return token == ":"
+
 def parse_name(token: str) -> str:
     if token[0] == "\"" and token[-1] == "\"" and len(token) > 2:
         return token[1:-1]
@@ -202,6 +209,21 @@ def parse_dict(tokenized: list, i: int) -> tuple:
 def match_comma(token: str) -> bool:
     return match_generic(token, ",")
 
+
+
+'''
+Unlike the other types, a set requires two tokens of look-ahead.
+
+'''
+'''
+def match_set(tokenized: list, i: int):
+    if (
+        match_generic(tokenized[i], "{")
+        and match_val(tokenized[i+1])
+        and not match_colon(tokenize[i+2])
+    ):
+        
+'''
 
 '''
 Any content wrapped in quotation marks can be a String
@@ -288,6 +310,11 @@ def parse_num(token: str):
             raise Exception(token + " cannot be parsed as a number")
     
 '''
+def match_val(token: str) -> bool:
+    if match_bool(token) or \
+    other
+''' 
+'''
 Takes a given value (not key) token, formed as a string, as input, and returns
 it it's proper data type.
 
@@ -327,7 +354,7 @@ def parse_value(tokenized: list, i: int):
 
 
 '''
-Parses all the entries at a given level of dictionary
+Parses all the entries at a given level of dictionary.
 '''
 def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
     #parsed_dict = parsed[0]
@@ -336,7 +363,7 @@ def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
     while tokenized[i] != "}":
         #Checks for a name and ":"
         key = parse_name(tokenized[i])
-        if not (match_generic(tokenized[i+1], ":")):
+        if not match_colon(tokenized[i+1]):
             raise Exception("Input is missing \":\" sepperating key and value.")
         i += 2 
 
