@@ -284,6 +284,8 @@ def parse_list(tokenized: list, i: int) -> list:
         i = parse_result[1]
         if match_comma(tokenized[i]):
             i += 1
+            if match_generic(tokenized[i], "]"):
+                return (new_list, i+1)
         #only return the list if it's closed. If it never is, we throw an error.
         elif match_generic(tokenized[i], "]") :
             return (new_list, i+1)
@@ -594,7 +596,7 @@ def main():
     file_path = os.path.join(local_dir, file_name)
     '''
     print("I'm in!")
-    dictionary = parse_file("test_data/medium_test.json")
+    dictionary = parse_file("test_data/numeric_test.json")
 
     print('DICTIONARY:')
     print(dictionary)
