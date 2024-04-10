@@ -1,8 +1,5 @@
-
-
-#CONSIDER CHANGING BACK TO #!/usr/bin/python3 FOR SUBMISSION
+#!/usr/bin/python3
 import copy
-
 
 DESCRIPTION = '''
 A homebrew JSON parser which extends standard JSON with sets and complex numbers.
@@ -28,6 +25,8 @@ End             E -> (,D)|| , || episol
 
 Not 100% corrent; data within lists has different rules for commas.
 
+To expand to new types, I must add new methods for matching and parsing
+the types, and I must checks for those types to parse_value functions
 
 '''
 
@@ -84,8 +83,6 @@ def is_number(char: str) -> bool:
     else:
         return False
 
-    
-
 '''
 Returns the index which tokenize should split to.
 
@@ -111,8 +108,7 @@ def find_end(content: str) -> int:
         return 5
     else:
         raise RuntimeError
-        
-        
+           
 
 def tokenize(content: str) -> list:
     i = 0
@@ -136,21 +132,6 @@ def tokenize(content: str) -> list:
     return tokenized
 
 '''
-
-def parse_s(tokenized: list, parsed: list, i: int) -> dict:
-    c = tokenized[i]
-
-    if c == "{":
-        match{"{"}
-
-
-def match(cur_token: str, target: str) -> bool:
-    if cur_token == target:
-        return True
-'''
-
-
-'''
 Checks that a name is correctly formatted.
 
 Do I need to check for additional quotation marks in the name?
@@ -163,7 +144,6 @@ def match_name(c: str) -> str:
         return c[1:-1]
     else:
         raise Exception("Error: Key " + c + " is incorrectly formatted")
-
 
 '''
 A more flexible matching tool for doing simple checks.
@@ -181,18 +161,6 @@ def match_generic(c: str, target: str) -> bool:
 
 def add(parsed: list, c: str) -> dict:
     pass
-
-'''
-def parse_content(tokenized: list, i: int):
-    #is the content an int?
-
-    #is the content a strin?
-
-    #is the content a dict?
-    #dostuff
-    return (3, 8)
-'''
-
 
 '''
 These functions are technically unnecesary, but I think it is clearer than directly using
@@ -231,44 +199,6 @@ def parse_bool(token: str) -> bool:
         return False
     
 
-'''
-Identifies the type of value in a list, and parses it as appropriate
-
-This is a poor solution. It is almost identical to parse_dict_value() - the only
-difference is how i is incremented.
-
-I hope that I'll have time to fix this, but it works.
-'''
-def parse_list_value(tokenized: list, i: int):
-    token = tokenized[i]
-    value = None
-    #print(token)
-    if match_num(token):
-        value = parse_num(token)
-        i += 1
-    elif match_bool(token):
-        value = parse_bool(token)
-        i += 1
-    elif match_list(token):
-        parse_result = parse_list(tokenized, i+1)
-        value = parse_result[0]
-        i = parse_result[1]           
-    #Check this after num; any number can be a string, but not vice versa     
-    elif match_string(token):
-        value = parse_string(token)
-        i += 1
-    #Lists and dicts involve parsing multiple values, so we pass the list of tokens
-
-    elif match_dict(token):
-        parse_result = parse_dict(tokenized, i+1)
-        value = parse_result[0]
-        i = parse_result[1]
-    else:
-        raise Exception("Error: list value is invalid")
-    
-    return (value, i)
-    
-
 def parse_list(tokenized: list, i: int) -> list:
     new_list = []
 
@@ -279,7 +209,7 @@ def parse_list(tokenized: list, i: int) -> list:
     #Given that the list has at least one entry, it can only be closed after an entry.
     while i < len(tokenized):
         print("List token is: " + tokenized[i])
-        parse_result = parse_list_value(tokenized, i)
+        parse_result = parse_value(tokenized, i)
         new_list.append(parse_result[0])
         i = parse_result[1]
         if match_comma(tokenized[i]):
@@ -291,10 +221,6 @@ def parse_list(tokenized: list, i: int) -> list:
             return (new_list, i+1)
     
     raise Exception("Error: list is not closed with a \"]\".") 
-
-
-
-
 
 '''
 Takes in the list of tokens, and a start location, then parses to the end of the dictionary.
@@ -353,24 +279,8 @@ def match_num(token: str) -> bool:
         except:
             return False
     
-    #try
-    
-    #return type(token) == float or type(token) == int
-    
-    
-    '''try:
-        print("made it!")
-        parse_num(token)
-        print("made it!")
-    except:
-        return False
-    else:
-        return True'''
 
-'''
-PROBLEM: This increments i as if it's still parsing dict members
-'''
-def parse_dict_value(tokenized: list, i: int):
+def parse_value(tokenized: list, i: int):
     token = tokenized[i]
     value = None
 
@@ -400,7 +310,6 @@ def parse_dict_value(tokenized: list, i: int):
     
     return (value, i)
 
-
 '''
 Not much to do here, but the wrapper keeps consistency
 '''
@@ -418,17 +327,6 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
     parsed_dict = parsed[0]
     i = copy.deepcopy(parsed[1])
     print("in parse_entries, i = " + str(i))
-
-    #Find the end of the current dict, and parse to it. Each loop parses a key-value pair.
-    '''
-    try: 
-        parse_extent = i + tokenized[i:].index("}")
-        #print("After trying, i = " + str(i))
-    except:
-        raise Exception("Error: Dictionary is not closed")
-    else:
-    '''
-
     
     while tokenized[i] != "}":
         print(parsed_dict)
@@ -439,7 +337,7 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
         i += 2 #sets i to the index of the key's value
         value = None
 
-        value_result = parse_dict_value(tokenized, i)
+        value_result = parse_value(tokenized, i)
 
         value = value_result[0]
         i = value_result[1]
@@ -460,85 +358,11 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
     return (parsed_dict, i)
 
 
-    '''
-    #Check that a top-level dictionary is being made properly
-    #if match_generic(tokenized[0], "{") == True:
-
-    
-        #should it be until i = the index of the next } instead?    
-        while i < len(tokenized):
-            #If it's a name-value pair
-            
-            key = match_name(tokenized[i])
-            match_generic(tokenized[i+1], ":")
-            parse_result = parse_content(tokenized[], i+2)
-            
-            val = parse_result[0]
-            i += parse_result[1]
-
-            parsed[key] = val
-    else:
-        raise Exception("Error: Dictionary is missing an opening \"{\".")
-    
-    if match_generic(tokenized[i], "}"):
-        return parsed
-    else:
-        raise Exception("Dictionary is missing a closing \"}\".")
-        '''
-    
-    
-    
-
-    #Make a parse_first method to handle making a dictionary with no name
-    
-    '''c = tokenized[i]
-
-    if is_name(c) == True:
-        #add name
-        #add colon???
-        #add value OR container
-    else if is_container(c) == True:
-        pass
-'''
-
-    
-
-
-'''
-parse_A = name (string?)
-    NAME CONTENT
-
-    CONTENT -> CONTAINER OR STRING OR NUM
-
-    for STRING or NUM, check if the next non-comma char is container closer
-
-parse_b = container (list or dict) OR val 
-parse_c = num
-parse_d = ","
- 
-
-Fundamentally, this is about reading every single character in the input. With each character, we do one of two things: create
-predictions about what future characters will be, or confirm past predictions. We must never predict wrong, which is why it's 
-important to cover every single input character.
-
-If we come across a colon, we know that the next token should NOT be a close brace, but it can be essentially anything else (can it 
-be an a single comma?). So we parse the next piece knowing, knowing that it will be one of a set of things - lets call it data. Data
-can take on many forms. We do not know which form it will take on, but we know that it will take on one of these forms. So our data
-method must be able to handle any of these forms. It will take the next token, and it will determine the type of data. .
-
-'''
-
-
 def parse(tokenized: list) -> dict:
     if match_generic(tokenized[0], "{") == True:
         parsed = ({}, 1)
         return parse_entries(tokenized, parsed)
         
-
-
-
-
-
 
 def parse_file(file_name: str) -> dict:
     #content = ""
@@ -555,37 +379,7 @@ def parse_file(file_name: str) -> dict:
     return(parsed[0])
 
 
-
-
-
-
-'''
-TOOD:
-    - Figure out grammar
-    - Implement grammar
-    - Clean code - be sure to add some more failure handling!
-
-    
-need 2-token look-ahead (see attribtue name, look past ":", see folling token)
-    -if [       -> list
-    -if string, -> string
-    -f num      -> num
-
-
-If the first symbol is:
-    -"STRING"   -> (Preapre to) Add string as name
-    -
-
-'''
-
-
-
-
-
-#py parser.py test_data/$TEST_FILE_NAME.json
-
 def main():
-    '''
     ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
     ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
     args = ap.parse_args()
@@ -594,9 +388,10 @@ def main():
     file_name = args.file_name
     local_dir = os.path.dirname(__file__)
     file_path = os.path.join(local_dir, file_name)
-    '''
-    print("I'm in!")
-    dictionary = parse_file("test_data/numeric_test.json")
+
+    dictionary = parse_file(file_path)
+
+    #dictionary = parse_file("test_data/medium_test.json")
 
     print('DICTIONARY:')
     print(dictionary)
@@ -604,15 +399,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-'''
-TODO:
-Figure out how to handle matching the list (probably should do the same
-thing you do for dicts, just for consistency. COnsider implementing a
-2-sided match function?)
-Implement match_list()
-Implement parse_list()
-Test!
-Extend!
-
-'''
