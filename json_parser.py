@@ -138,7 +138,6 @@ Do I need to check for additional quotation marks in the name?
 
 '''
 def match_name(c: str) -> str:
-
     #Checks that name is surrounded by "", annd that it has content
     if c[0] == "\"" and c[-1] == "\"" and len(c) > 2:
         return c[1:-1]
@@ -147,25 +146,17 @@ def match_name(c: str) -> str:
 
 '''
 A more flexible matching tool for doing simple checks.
-
-Because none of these will be directly added to the final dictionary, it does not
-need to return the matched value.
 '''
 def match_generic(c: str, target: str) -> bool:
     if c == target:
         return True
     else:
         return False
-        #raise Exception("Error: Expected " + target + ", got " + c + ".")
 
-
-def add(parsed: list, c: str) -> dict:
-    pass
 
 '''
-These functions are technically unnecesary, but I think it is clearer than directly using
-match_generic().
-
+Some of these matching functions are technically unnecesary, but I think they
+are clearer than directly using match_generic() in all cases.
 '''
 def match_dict(token: str) -> bool:
     return match_generic(token, "{")
@@ -208,17 +199,18 @@ def parse_list(tokenized: list, i: int) -> list:
 
     #Given that the list has at least one entry, it can only be closed after an entry.
     while i < len(tokenized):
-        print("List token is: " + tokenized[i])
         parse_result = parse_value(tokenized, i)
         new_list.append(parse_result[0])
         i = parse_result[1]
+
         if match_comma(tokenized[i]):
             i += 1
-            if match_generic(tokenized[i], "]"):
-                return (new_list, i+1)
-        #only return the list if it's closed. If it never is, we throw an error.
-        elif match_generic(tokenized[i], "]") :
+        #Paired conditionals cover list ending, whether or not there is a trailing comma.
+        if match_generic(tokenized[i], "]"):
             return (new_list, i+1)
+        
+
+            
     
     raise Exception("Error: list is not closed with a \"]\".") 
 
