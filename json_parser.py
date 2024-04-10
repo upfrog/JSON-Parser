@@ -272,7 +272,6 @@ def parse_string(token: str) -> str:
 def match_list(token) -> list:
     return match_generic(token, "[")
     
-
 '''
 Given the index of the first content token in a list, parses that list and it's contents.
 '''
@@ -307,6 +306,29 @@ def parse_bool(token: str) -> bool:
         return True
     elif token == "false":
         return False
+    
+
+def match_complex(token: str) -> bool:
+    if token[-1] == "i":
+        return True
+
+'''
+Start at the right (or maybe index 1)
+go left until you find a non-number, non-decimal
+    -if it's + || -, this is the end of the first number
+    -if it's e, go ahead one, then keep going right until you find + || -
+    that point, to the left, is your second term
+
+    Nope!!! :33
+'''
+def parse_complex(token: str) -> complex:
+    if token.find(" ") != -1:
+        raise Exception("Imaginary numbers must not contain spaces")
+    '''
+    token[:-1].append("j")
+    print(complex(token))
+    '''
+    return complex(token.replace("i","j"))
 
 '''
 Initially I wanted to independently code this, but I decided that I was better off 
@@ -365,6 +387,9 @@ def parse_value(tokenized: list, i: int):
         i += 1
     elif match_bool(token):
         value = parse_bool(token)
+        i += 1
+    elif match_complex(token):
+        value = parse_complex(token)
         i += 1     
     elif match_string(token):
         value = parse_string(token)
