@@ -1,4 +1,6 @@
-#!/usr/bin/python3
+
+
+#CONSIDER CHANGING BACK TO #!/usr/bin/python3 FOR SUBMISSION
 import copy
 
 
@@ -158,7 +160,7 @@ def match_name(c: str) -> str:
 
     #Checks that name is surrounded by "", annd that it has content
     if c[0] == "\"" and c[-1] == "\"" and len(c) > 2:
-        return c
+        return c[1:-1]
     else:
         raise Exception("Error: Key " + c + " is incorrectly formatted")
 
@@ -246,18 +248,19 @@ def parse_list_value(tokenized: list, i: int):
         i += 1
     elif match_bool(token):
         value = parse_bool(token)
-        i += 1   
+        i += 1
+    elif match_list(token):
+        parse_result = parse_list(tokenized, i+1)
+        value = parse_result[0]
+        i = parse_result[1]           
     #Check this after num; any number can be a string, but not vice versa     
     elif match_string(token):
         value = parse_string(token)
         i += 1
     #Lists and dicts involve parsing multiple values, so we pass the list of tokens
-    elif match_list(token):
-        parse_result = parse_list(tokenized, i+3)
-        value = parse_result[0]
-        i = parse_result[1]
+
     elif match_dict(token):
-        parse_result = parse_dict(tokenized, i+3)
+        parse_result = parse_dict(tokenized, i+1)
         value = parse_result[0]
         i = parse_result[1]
     else:
@@ -298,14 +301,15 @@ Takes in the list of tokens, and a start location, then parses to the end of the
 def parse_dict(tokenized: list, i: int) -> tuple:
     
     new_dict = {}
-    print("First dict val: " + tokenized[i])
+    print("First dict key: " + tokenized[i])
     print("in parse_dict, i = " + str(i))
     print("in parse_dict, tokenized[i] = " + tokenized[i])
 
     parsed_result = parse_entries(tokenized, (new_dict, i))
     new_dict = parsed_result[0]
     i = parsed_result[1]
-    match_generic(tokenized[i], "}")
+    if match_generic(tokenized[i], "}"):
+        i += 1
 
     return (new_dict, i)
 
@@ -399,7 +403,10 @@ def parse_dict_value(tokenized: list, i: int):
 Not much to do here, but the wrapper keeps consistency
 '''
 def parse_string(token: str) -> str:
-    return token
+    if token == "\"\"":
+        return "1"
+    else:
+        return token[1:-1]
 
 '''
 Parses all the entries at a given level of dictionary
@@ -412,13 +419,14 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
 
     #Find the end of the current dict, and parse to it. Each loop parses a key-value pair.
     try: 
-        parse_extent = tokenized[i:].index("}")
+        parse_extent = i + tokenized[i:].index("}")
         #print("After trying, i = " + str(i))
     except:
         raise Exception("Error: Dictionary is not closed")
     else:
         print("After else, i = " + str(i))
         while i < parse_extent:
+            print(parsed_dict)
             print("In While: " + str(i))
             print("Token: " + tokenized[i])
             key = match_name(tokenized[i])
@@ -430,13 +438,19 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
 
             value = value_result[0]
             i = value_result[1]
-            
-            match_comma(tokenized[i])
-            i += 1
-
             parsed_dict[key] = value
-            #print(parsed_dict)
-            print("yo!")
+            
+            if match_comma(tokenized[i]):
+                i += 1
+                
+            elif match_generic(tokenized[i], "}"):
+                pass
+            else:
+                raise Exception("Improper formatting!")
+
+            
+            
+            #print("yo!")
 
     return (parsed_dict, i)
 
@@ -566,7 +580,7 @@ If the first symbol is:
 #py parser.py test_data/$TEST_FILE_NAME.json
 
 def main():
-
+    '''
     ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
     ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
     args = ap.parse_args()
@@ -575,9 +589,9 @@ def main():
     file_name = args.file_name
     local_dir = os.path.dirname(__file__)
     file_path = os.path.join(local_dir, file_name)
-
- 
-    dictionary = parse_file(file_path)
+    '''
+    print("I'm in!")
+    dictionary = parse_file("test_data/medium_test.json")
 
     print('DICTIONARY:')
     print(dictionary)
