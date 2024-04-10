@@ -212,18 +212,47 @@ def match_comma(token: str) -> bool:
 
 
 '''
-Unlike the other types, a set requires two tokens of look-ahead.
+Unlike the other types, a set requires two tokens of look-ahead: one to check that
+the value is of the allowed types (int, float, boolean, string), and a second to to
+check that the token after the value is not a colon, which would indicate a key-value
+pair.
+'''
+def match_set(tokenized: list, i: int) -> bool:
+    if (match_generic(tokenized[i], "{")
+        and match_primitive(tokenized[i+1])
+        and not match_colon(tokenized[i+2])):
+        return True
+    else:
+        return False
+
 
 '''
+Because sets cannot contain multi-token structures, stuff
+
+The structure of the code is extremely similar to parse_list(). I wonder if there is
+some way to use this similarity to economize on code?
 '''
-def match_set(tokenized: list, i: int):
-    if (
-        match_generic(tokenized[i], "{")
-        and match_val(tokenized[i+1])
-        and not match_colon(tokenize[i+2])
-    ):
+def parse_set(tokenized: list, i: int) -> tuple:
+    new_set = set()
+
+    if tokenized[i] == ")":
+        return new_set
+    
+    while i < len(tokenized):
+        if not match_primitive(tokenized[i]):
+            raise Exception("Set can only contain Python primitive types.")
         
-'''
+        parse_result = parse_value(tokenized, i)
+        new_set.add(parse_result[0])
+        i += 1
+
+        if match_comma(tokenized[i]):
+            i += 1
+        if match_generic(tokenized[i], "}"):
+            return (new_set, i+1)
+
+    raise Exception("Set is not closed with a \"]\".") 
+
 
 '''
 Any content wrapped in quotation marks can be a String
@@ -309,11 +338,15 @@ def parse_num(token: str):
         except:
             raise Exception(token + " cannot be parsed as a number")
     
-'''
-def match_val(token: str) -> bool:
-    if match_bool(token) or \
-    other
-''' 
+
+def match_primitive(token: str) -> bool:
+    if (match_bool(token)
+        or match_string(token)
+        or match_num(token)):
+        return True
+    else:
+        return False       
+
 '''
 Takes a given value (not key) token, formed as a string, as input, and returns
 it it's proper data type.
@@ -337,6 +370,10 @@ def parse_value(tokenized: list, i: int):
         value = parse_string(token)
         i += 1
     #Lists and dicts involve parsing multiple values, so we pass the list of tokens
+    elif match_set(tokenized, i):
+        parse_result = parse_set(tokenized, i+1)
+        value = parse_result[0]
+        i = parse_result[1]
     elif match_list(token):
         parse_result = parse_list(tokenized, i+1)
         value = parse_result[0]
