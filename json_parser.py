@@ -127,17 +127,49 @@ def tokenize(content: str) -> list:
     return tokenized
 
 '''
-Checks that a name is correctly formatted.
-
-Do I need to check for additional quotation marks in the name?
+==========================================================
+==================PARSING=================================
+==========================================================
+'''
 
 '''
-def match_name(c: str) -> str:
-    #Checks that name is surrounded by "", annd that it has content
-    if c[0] == "\"" and c[-1] == "\"" and len(c) > 2:
-        return True
-    else:
-        return False
+Matching and Parsing
+
+The basic structure of my code is classify a token by it's data type, and then to
+process it according to that classification.
+
+Match functions are preceded by the match_ prefix, and return a boolean; True if the
+input token matches the given type, and False if it does not.
+
+Parse functions are more complicated, and handle the (often recursive) process of 
+turning a token into a properly typed object, which can be added to the final dictionary.
+
+Matching is mostly simple, and in many cases could in principle be handled by a 
+single-line comparison, but I often find it more readable to give a given match
+it's own dedicated method, even if it's just a wrapper for match_generic(), which is
+itself a wrapper for a single line of code.
+
+Unlike matching, parsing often operates on more than a single token. This means that
+parsing must keep track of it's index across many different levels of recurions. I 
+solve this by returning tuples, consiting of the parsed value, and the index of the
+next token to be parsed.
+
+Parsing methods are also where exceptions are thrown in case of mal-formed input.
+'''
+
+
+'''
+A flexible matching tool for doing simple checks.
+'''
+def match_generic(token: str, target: str) -> bool:
+    return token == target
+
+'''
+Checks that a name is correctly formatted: that it is surrounded by quotation  marks,
+and that it is not an empty string.
+'''
+def match_name(token: str) -> str:
+    return token[0] == "\"" and token[-1] == "\"" and len(token) > 2
 
 
 def parse_name(token: str) -> str:
@@ -146,79 +178,13 @@ def parse_name(token: str) -> str:
     else:
         raise Exception("Key " + token + " is incorrectly formatted")
     
-'''
-A more flexible matching tool for doing simple checks.
-'''
-def match_generic(c: str, target: str) -> bool:
-    if c == target:
-        return True
-    else:
-        return False
 
-
-'''
-Some of these matching functions are technically unnecesary, but I think they
-are clearer than directly using match_generic() in all cases.
-'''
 def match_dict(token: str) -> bool:
     return match_generic(token, "{")
 
-
-def match_comma(token: str) -> bool:
-    return match_generic(token, ",")
-
-
 '''
-Any content wrapped in quotation marks can be a String
-'''
-def match_string(token: str) -> str:
-    if token[0] == "\"" and token[-1] == "\"":
-        return True
-    
-
-def match_list(token) -> list:
-    if match_generic(token, "["):
-        return True
-    
-
-def match_bool(token: str) -> bool:
-    return (token == "true" or token == "false")
-
-
-def parse_bool(token: str) -> bool:
-    if token == "true":
-        return True
-    elif token == "false":
-        return False
-    
-
-def parse_list(tokenized: list, i: int) -> list:
-    new_list = []
-
-    #if the list is empty
-    if tokenized[i] == "]":
-        return new_list
-
-    #Given that the list has at least one entry, it can only be closed after an entry.
-    while i < len(tokenized):
-        parse_result = parse_value(tokenized, i)
-        new_list.append(parse_result[0])
-        i = parse_result[1]
-
-        if match_comma(tokenized[i]):
-            i += 1
-        #Paired conditionals cover list ending, whether or not there is a trailing comma.
-        if match_generic(tokenized[i], "]"):
-            return (new_list, i+1)
-        
-
-            
-    
-    raise Exception("Error: list is not closed with a \"]\".") 
-
-'''
-Takes in the list of tokens, and a start location, then parses to the end of the dictionary.
-
+Given the index of the first content token in a dictionary, parses that dictionary
+and it's contents.
 '''
 def parse_dict(tokenized: list, i: int) -> tuple:
     
@@ -232,32 +198,69 @@ def parse_dict(tokenized: list, i: int) -> tuple:
 
     return (new_dict, i)
 
-'''
-Takes a string number as input, and returns it as an into or a float.
 
-Might be better handled by try-catching conversions - I understand that 
-"ask forgiveness, not permission" is pythonic.
-'''
-def parse_num(token: str):
-    num = token #num[1:-1] #strip quotation marks
-    parsed_num = None
+def match_comma(token: str) -> bool:
+    return match_generic(token, ",")
 
-    try:
-        if num.find(".") != -1:
-            parsed_num = float(num)
-        else:
-            parsed_num = int(num)
-    except:
-        raise Exception("Not a valid number.")
+
+'''
+Any content wrapped in quotation marks can be a String
+'''
+def match_string(token: str) -> bool:
+    if token[0] == "\"" and token[-1] == "\"":
+        return True
+    
+
+def parse_string(token: str) -> str:
+    if token == "\"\"":
+        return ""
     else:
-        return parsed_num
+        return token[1:-1]
+    
+
+def match_list(token) -> list:
+    return match_generic(token, "[")
+    
 
 '''
-Relies on parse_num().
+Given the index of the first content token in a list, parses that list and it's contents.
+'''
+def parse_list(tokenized: list, i: int) -> tuple:
+    new_list = []
 
-Initially I wanted to independently code this, to reduce my constraints for ordering
-functions, but I decided that it was better to rely on Python's in-built type
-compatibility checking, than jury-rigging my own.
+    #if the list is empty
+    if tokenized[i] == "]":
+        return new_list
+
+    #Given that the list has at least one entry, it can only be closed after an entry.
+    while i < len(tokenized):
+        parse_result = parse_value(tokenized, i)
+        new_list.append(parse_result[0])
+        i = parse_result[1]
+
+        #Paired conditionals cover list ending, whether or not there is a trailing comma.
+        if match_comma(tokenized[i]):
+            i += 1
+        if match_generic(tokenized[i], "]"):
+            return (new_list, i+1)
+        
+    raise Exception("Error: list is not closed with a \"]\".") 
+
+
+def match_bool(token: str) -> bool:
+    return (token == "true" or token == "false")
+
+
+def parse_bool(token: str) -> bool:
+    if token == "true":
+        return True
+    elif token == "false":
+        return False
+
+'''
+Initially I wanted to independently code this, but I decided that I was better off 
+relying on Python's in-built type compatibility checking, rather than jury-rigging 
+my own. Besides - isn't "ask forgiveness, not permission" a think in Pyhon style?
 '''
 def match_num(token: str) -> bool:
     try:
@@ -269,6 +272,20 @@ def match_num(token: str) -> bool:
             return True
         except:
             return False
+    
+'''
+Takes a string number as input, and returns it as an into or a float.
+
+Can be handled through string analysis, but this seemed more reliable.
+'''
+def parse_num(token: str):
+    try:
+        return int(token) 
+    except:
+        try:
+            return float(token)
+        except:
+            raise Exception(token + " cannot be parsed as a number")
     
 
 def parse_value(tokenized: list, i: int):
@@ -300,14 +317,7 @@ def parse_value(tokenized: list, i: int):
     
     return (value, i)
 
-'''
-Not much to do here, but the wrapper keeps consistency
-'''
-def parse_string(token: str) -> str:
-    if token == "\"\"":
-        return "1"
-    else:
-        return token[1:-1]
+
 
 '''
 Parses all the entries at a given level of dictionary
