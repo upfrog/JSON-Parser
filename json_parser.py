@@ -1,7 +1,9 @@
-#!/usr/bin/python3
+
 
 DESCRIPTION = '''
 A homebrew JSON parser which extends standard JSON with sets and complex numbers.
+
+#!/usr/bin/python3
 '''
 
 import argparse
@@ -364,7 +366,8 @@ def parse_num(token: str):
 def match_primitive(token: str) -> bool:
     if (match_bool(token)
         or match_string(token)
-        or match_num(token)):
+        or match_num(token)
+        or match_complex(token)):
         return True
     else:
         return False       
@@ -404,6 +407,7 @@ def parse_value(tokenized: list, i: int):
         value = parse_result[0]
         i = parse_result[1]
     elif match_dict(token):
+        #print(i)
         parse_result = parse_dict(tokenized, i+1)
         value = parse_result[0]
         i = parse_result[1]
@@ -465,6 +469,7 @@ def parse_file(file_name: str) -> dict:
 Proccesses command line input, and prints the final product.
 '''
 def main():
+    '''
     ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
     ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
     args = ap.parse_args()
@@ -473,7 +478,9 @@ def main():
     file_name = args.file_name
     local_dir = os.path.dirname(__file__)
     file_path = os.path.join(local_dir, file_name)
+    '''
 
+    file_path = "test_data/zEAJGG3UFh6tbqz4.json"
     dictionary = parse_file(file_path)
 
     #dictionary = parse_file("test_data/medium_test.json")
