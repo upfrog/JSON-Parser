@@ -418,35 +418,38 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
     print("in parse_entries, i = " + str(i))
 
     #Find the end of the current dict, and parse to it. Each loop parses a key-value pair.
+    '''
     try: 
         parse_extent = i + tokenized[i:].index("}")
         #print("After trying, i = " + str(i))
     except:
         raise Exception("Error: Dictionary is not closed")
     else:
-        print("After else, i = " + str(i))
-        while i < parse_extent:
-            print(parsed_dict)
-            print("In While: " + str(i))
-            print("Token: " + tokenized[i])
-            key = match_name(tokenized[i])
-            match_generic(tokenized[i+1], ":")
-            i += 2 #sets i to the index of the key's value
-            value = None
+    '''
 
-            value_result = parse_dict_value(tokenized, i)
+    
+    while tokenized[i] != "}":
+        print(parsed_dict)
+        print("In While: " + str(i))
+        print("Token: " + tokenized[i])
+        key = match_name(tokenized[i])
+        match_generic(tokenized[i+1], ":")
+        i += 2 #sets i to the index of the key's value
+        value = None
 
-            value = value_result[0]
-            i = value_result[1]
-            parsed_dict[key] = value
+        value_result = parse_dict_value(tokenized, i)
+
+        value = value_result[0]
+        i = value_result[1]
+        parsed_dict[key] = value
+
+        if match_comma(tokenized[i]):
+            i += 1
             
-            if match_comma(tokenized[i]):
-                i += 1
-                
-            elif match_generic(tokenized[i], "}"):
-                pass
-            else:
-                raise Exception("Improper formatting!")
+        elif match_generic(tokenized[i], "}"):
+            pass
+        else:
+            raise Exception("Improper formatting!")
 
             
             
