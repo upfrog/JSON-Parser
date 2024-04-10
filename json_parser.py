@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import copy
 
 DESCRIPTION = '''
 A homebrew JSON parser which extends standard JSON with sets and complex numbers.
@@ -149,12 +148,13 @@ single-line comparison, but I often find it more readable to give a given match
 it's own dedicated method, even if it's just a wrapper for match_generic(), which is
 itself a wrapper for a single line of code.
 
-Unlike matching, parsing often operates on more than a single token. This means that
+Unlike matching, parsing sometimes operates on more than a single token. This means that
 parsing must keep track of it's index across many different levels of recurions. I 
-solve this by returning tuples, consiting of the parsed value, and the index of the
-next token to be parsed.
+solve this by having some parse methods return tuples, consisting of the parsed value, 
+and the index of the next token to be parsed. Not all parse functions return a tuple;
+this is inconsistent, but the tuple unpacking clutters up code.
 
-Parsing methods are also where exceptions are thrown in case of mal-formed input.
+Parsing methods are also where exceptions are thrown in case of malformed input.
 '''
 
 
@@ -287,7 +287,15 @@ def parse_num(token: str):
         except:
             raise Exception(token + " cannot be parsed as a number")
     
+'''
+Takes a given value (not key) token, formed as a string, as input, and returns
+it it's proper data type.
 
+The order of the if-statements could be important, since a boolean "true" or "false"
+could be read as a string - as could any number. This shouldn't matter, since my string
+matching relies on the presence of quoation marks, which shouldn't be present in numbers
+or booleans.
+'''
 def parse_value(tokenized: list, i: int):
     token = tokenized[i]
     value = None
@@ -295,7 +303,6 @@ def parse_value(tokenized: list, i: int):
     if match_num(token):
         value = parse_num(token)
         i += 1
-    #Check this after num; any number can be a string, but not vice versa
     elif match_bool(token):
         value = parse_bool(token)
         i += 1     
@@ -324,30 +331,28 @@ Parses all the entries at a given level of dictionary
 '''
 def parse_entries(tokenized: list, parsed: tuple) -> tuple:
     parsed_dict = parsed[0]
-    i = copy.deepcopy(parsed[1])
+    i = parsed[1]
     
     while tokenized[i] != "}":
-        if match_name(tokenized[i]):
-            key = parse_name(tokenized[i])
-        match_generic(tokenized[i+1], ":")
-        i += 2 #sets i to the index of the key's value
-        value = None
+        #Checks for a name and ":"
+        key = parse_name(tokenized[i])
+        if not (match_generic(tokenized[i+1], ":")):
+            raise Exception("Input is missing \":\" sepperating key and value.")
+        i += 2 
 
         value_result = parse_value(tokenized, i)
 
         value = value_result[0]
         i = value_result[1]
+
         parsed_dict[key] = value
 
+        #Paired conditionals cover dict ending, whether or not there is a trailing comma.
         if match_comma(tokenized[i]):
             i += 1
-            
-        elif match_generic(tokenized[i], "}"):
-            pass
-        else:
-            raise Exception("Improper formatting!")
-
-
+        if i >= len(tokenized):
+            raise Exception("Dictionary is not closed with a \"}\".")
+        
     return (parsed_dict, i)
 
 
