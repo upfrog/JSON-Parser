@@ -114,20 +114,15 @@ def tokenize(content: str) -> list:
     i = 0
     tokenized = []
     while (i < len(content)):
-        #print(i)
-        #print(tokenized)
         if content[i] == " " or content[i] == "\n": #Ignore spaces and newlines
             i += 1
-            #print(1)
         elif is_divider(content[i]): #Atomically add seperators
             tokenized.append(content[i])
             i += 1
-            #print(2)
         else: #Content should be added as a range of indices
             j = i + find_end(content[i:])
             tokenized.append(content[i:j])
             i = j
-            #print(3)
 
     return tokenized
 
@@ -228,9 +223,6 @@ Takes in the list of tokens, and a start location, then parses to the end of the
 def parse_dict(tokenized: list, i: int) -> tuple:
     
     new_dict = {}
-    print("First dict key: " + tokenized[i])
-    print("in parse_dict, i = " + str(i))
-    print("in parse_dict, tokenized[i] = " + tokenized[i])
 
     parsed_result = parse_entries(tokenized, (new_dict, i))
     new_dict = parsed_result[0]
@@ -283,7 +275,6 @@ def parse_value(tokenized: list, i: int):
     token = tokenized[i]
     value = None
 
-    #print(type(int(token)))
     if match_num(token):
         value = parse_num(token)
         i += 1
@@ -322,15 +313,10 @@ def parse_string(token: str) -> str:
 Parses all the entries at a given level of dictionary
 '''
 def parse_entries(tokenized: list, parsed: tuple) -> tuple:
-    print("===============")
     parsed_dict = parsed[0]
     i = copy.deepcopy(parsed[1])
-    print("in parse_entries, i = " + str(i))
     
     while tokenized[i] != "}":
-        print(parsed_dict)
-        print("In While: " + str(i))
-        print("Token: " + tokenized[i])
         if match_name(tokenized[i]):
             key = parse_name(tokenized[i])
         match_generic(tokenized[i+1], ":")
@@ -351,9 +337,6 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
         else:
             raise Exception("Improper formatting!")
 
-            
-            
-            #print("yo!")
 
     return (parsed_dict, i)
 
@@ -365,16 +348,14 @@ def parse(tokenized: list) -> dict:
         
 
 def parse_file(file_name: str) -> dict:
-    #content = ""
     #access the file and get contents
-    print(file_name)
+
     with open(file_name) as file:
         content = file.read()
 
     tokenized = tokenize(content)
     print(tokenized)
 
-    #parsed = {}
     parsed = parse(tokenized)
     return(parsed[0])
 
