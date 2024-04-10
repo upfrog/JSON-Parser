@@ -190,7 +190,7 @@ def parse_dict(tokenized: list, i: int) -> tuple:
     
     new_dict = {}
 
-    parsed_result = parse_entries(tokenized, (new_dict, i))
+    parsed_result = parse_entries(tokenized, new_dict, i)
     new_dict = parsed_result[0]
     i = parsed_result[1]
     if match_generic(tokenized[i], "}"):
@@ -329,9 +329,9 @@ def parse_value(tokenized: list, i: int):
 '''
 Parses all the entries at a given level of dictionary
 '''
-def parse_entries(tokenized: list, parsed: tuple) -> tuple:
-    parsed_dict = parsed[0]
-    i = parsed[1]
+def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
+    #parsed_dict = parsed[0]
+    #i = parsed[1]
     
     while tokenized[i] != "}":
         #Checks for a name and ":"
@@ -345,7 +345,7 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
         value = value_result[0]
         i = value_result[1]
 
-        parsed_dict[key] = value
+        parsed[key] = value
 
         #Paired conditionals cover dict ending, whether or not there is a trailing comma.
         if match_comma(tokenized[i]):
@@ -353,28 +353,28 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
         if i >= len(tokenized):
             raise Exception("Dictionary is not closed with a \"}\".")
         
-    return (parsed_dict, i)
+    return (parsed, i)
 
 
-def parse(tokenized: list) -> dict:
-    if match_generic(tokenized[0], "{") == True:
-        parsed = ({}, 1)
-        return parse_entries(tokenized, parsed)
-        
-
+'''
+For convenience, we make the top-level dictionary here, and pass it into the rest of the
+code.
+'''
 def parse_file(file_name: str) -> dict:
-    #access the file and get contents
-
     with open(file_name) as file:
         content = file.read()
 
     tokenized = tokenize(content)
     print(tokenized)
+    
+    if match_generic(tokenized[0], "{") == True:
+        return parse_entries(tokenized, {}, 1)[0]
+    else:
+        raise Exception("Input does not start with a \"{\".")
 
-    parsed = parse(tokenized)
-    return(parsed[0])
-
-
+'''
+Proccesses command line input, and prints the final product.
+'''
 def main():
     ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
     ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
