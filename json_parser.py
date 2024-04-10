@@ -140,10 +140,17 @@ Do I need to check for additional quotation marks in the name?
 def match_name(c: str) -> str:
     #Checks that name is surrounded by "", annd that it has content
     if c[0] == "\"" and c[-1] == "\"" and len(c) > 2:
-        return c[1:-1]
+        return True
     else:
-        raise Exception("Error: Key " + c + " is incorrectly formatted")
+        return False
 
+
+def parse_name(token: str) -> str:
+    if token[0] == "\"" and token[-1] == "\"" and len(token) > 2:
+        return token[1:-1]
+    else:
+        raise Exception("Key " + token + " is incorrectly formatted")
+    
 '''
 A more flexible matching tool for doing simple checks.
 '''
@@ -324,7 +331,8 @@ def parse_entries(tokenized: list, parsed: tuple) -> tuple:
         print(parsed_dict)
         print("In While: " + str(i))
         print("Token: " + tokenized[i])
-        key = match_name(tokenized[i])
+        if match_name(tokenized[i]):
+            key = parse_name(tokenized[i])
         match_generic(tokenized[i+1], ":")
         i += 2 #sets i to the index of the key's value
         value = None
