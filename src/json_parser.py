@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+
 
 DESCRIPTION = '''
 A homebrew JSON parser which extends standard JSON with sets and complex numbers.
@@ -495,7 +495,7 @@ parser on all files in the designated directory - which directory is hardcoded i
 run_tests() as TEST_DATA_LOCATION.
 '''
 def main():
-    mode = "command line"
+    mode = "mass test"
 
     if mode == "command line":
         ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
