@@ -1,7 +1,8 @@
 
 
 DESCRIPTION = '''
-A homebrew JSON parser which extends standard JSON with sets and complex numbers.
+A homebrew JSON parser which extends standard JSON with sets and complex
+numbers.
 '''
 
 import argparse
@@ -61,10 +62,6 @@ def is_divider(char: str) -> bool:
     }
 
     return char in single_char_dict
-    '''if char in single_char_dict:
-        return True
-    else:
-        return False'''
     
 
 def is_number(char: str) -> bool:
@@ -93,10 +90,6 @@ def is_number(char: str) -> bool:
     }
 
     return char in num_dict
-    '''if char in num_dict:
-        return True
-    else:
-        return False'''
 
 
 def find_end(content: str) -> int:
@@ -477,12 +470,25 @@ def parse_file(file_name: str) -> dict:
 
 
 def run_tests(test_files: list) -> str:
-    TEST_DATA_LOCATION = "test_data/base_tests"
+    '''A better way to run tests.
+
+    This was the first way I devised. I later decided that I should use
+    a proper unit testing framework, but frankly I'm not sure that the
+    change was at all beneficial.
+
+    The tests in test.py are bloated, and highly repetitve compared to
+    this. That said, I think that PyTest might be able to resolve
+    this issue.
+
+    This needs modification to fit the new test_data directory 
+    structure.
+    '''
+    TEST_DATA_LOCATION = "test_data/complex_set_tests"
     for test in test_files:
         try:
             path = os.path.join(TEST_DATA_LOCATION, test)
             print(parse_file(path))
-            print("\n\n=====================================================\n\n")
+            print("\n\n==================================================\n\n")
         except:
             raise Exception("Failed on file " + test)
 
@@ -495,7 +501,7 @@ def main():
     parser on all files in the designated directory - which directory is hardcoded in
     run_tests() as TEST_DATA_LOCATION.
     '''
-    mode = "mass test"
+    mode = "command line"
 
     if mode == "command line":
         ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
@@ -512,7 +518,7 @@ def main():
         print(dictionary)
 
     elif mode == "mass test":
-        dir_list = os.listdir("test_data/base_tests")
+        dir_list = os.listdir("test_data/complex_set_tests")
         run_tests(dir_list)
 
 
