@@ -9,13 +9,12 @@ import os.path
 
 YOUR_NAME_HERE = "Stephen Rout" 
 
-
 '''
 GRAMMAR:
 
 This is quite rough. It was useful for organizing my thoughts, especially since 
-it was illustrative for my problem statement and decomposision, but it is a long 
-ways from being mathematically rigorous.
+it was illustrative for my problem statement and decomposision, but it is a 
+long ways from being mathematically rigorous.
 
 DRAFT IV++:
 
@@ -468,7 +467,7 @@ def parse_file(file_name: str) -> dict:
         content = file.read()
 
     tokenized = tokenize(content)
-    print(tokenized)
+    #print(tokenized)
     
     if match_generic(tokenized[0], "{") == True:
         return parse_entries(tokenized, {}, 1)[0]
@@ -495,7 +494,7 @@ parser on all files in the designated directory - which directory is hardcoded i
 run_tests() as TEST_DATA_LOCATION.
 '''
 def main():
-    mode = "mass test"
+    mode = "command line"
 
     if mode == "command line":
         ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
