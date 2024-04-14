@@ -43,12 +43,12 @@ SET -> {num||str||bool||complex}
 ==========================================================
 '''
 
-'''
-A function to check if a given character should be tokenized individually.
 
-This uses a dictionary for O(1) lookup speed.
-'''
 def is_divider(char: str) -> bool:
+    '''Checks if a given character should be tokenized individually.
+
+    This uses a dictionary for O(1) lookup speed.
+    '''
     single_char_dict = {
         "{" : True,
         "}" : True,
@@ -65,13 +65,15 @@ def is_divider(char: str) -> bool:
     else:
         return False
     
-'''
-Checks if a given entry is a number, using a dictionary for O(1) lookup speed.
 
-There is probably a way to do this with python type conversion, but in this case
-this seemed simplest.
-'''
 def is_number(char: str) -> bool:
+    '''Checks if a given character can be a component of a number.
+    
+    Uses a dictionary for O(1) lookup speed.
+
+    There is probably a way to do this with type conversion, but  in 
+    this case this seemed simplest.
+    '''
     num_dict = {
         "1" : True,
         "2" : True,
@@ -94,15 +96,15 @@ def is_number(char: str) -> bool:
     else:
         return False
 
-'''
-Returns the index which tokenize should split to.
 
-This only checks for numbers, strings, and booleans.
-
-For quotation marks, we know the end of the split once we reach it, but for
-the other types, we only know the end index once we have passed it.
-'''
 def find_end(content: str) -> int:
+    '''Returns the index which tokenize should split to.
+
+    This only checks for numbers, strings, and booleans.
+
+    For quotation marks, we know the end of the split once we reach it, but for
+    the other types, we only know the end index once we have passed it.
+    '''
     if (content[0] == "\""):
         return content[1:].find("\"") + 2 #split should include the quote
     elif is_number(content[0]):
@@ -122,6 +124,8 @@ def find_end(content: str) -> int:
 
 
 def tokenize(content: str) -> list:
+    '''Divides an input string into individual JSON tokens
+    '''
     i = 0
     tokenized = []
     while (i < len(content)):
@@ -146,46 +150,48 @@ def tokenize(content: str) -> list:
 '''
 Matching and Parsing
 
-The basic structure of my code is classify a token by it's data type, and then to
-process it according to that classification.
+The basic structure of my code is classify a token by it's data type, 
+and then to process it according to that classification.
 
-Match functions are preceded by the match_ prefix, and return a boolean; True if the
-input token matches the given type, and False if it does not.
+Match functions are preceded by the match_ prefix, and return a boolean; 
+True if the input token matches the given type, and False if it does 
+not.
 
-Parse functions are more complicated, and handle the (often recursive) process of 
-turning a token into a properly typed object, which can be added to the final dictionary.
+Parse functions are more complicated, and handle the (often recursive) 
+process of  turning a token into a properly typed object, which can be 
+added to the final dictionary.
 
-Matching is mostly simple, and in many cases could in principle be handled by a 
-single-line comparison, but I often find it more readable to give a given match
-it's own dedicated method, even if it's just a wrapper for match_generic(), which is
-itself a wrapper for a single line of code.
+Matching is mostly simple, and in many cases could in principle be 
+handled by a single-line comparison, but I often find it more readable 
+to give a given match it's own dedicated method, even if it's just a 
+wrapper for match_generic(), which is itself a wrapper for a single 
+line of code.
 
-Unlike matching, parsing sometimes operates on more than a single token. This means that
-parsing must keep track of it's index across many different levels of recurions. I 
-solve this by having some parse methods return tuples, consisting of the parsed value, 
-and the index of the next token to be parsed. Not all parse functions return a tuple;
+Unlike matching, parsing sometimes operates on more than a single token. 
+This means that parsing must keep track of it's index across many 
+different levels of recurions. I  solve this by having some parse 
+methods return tuples, consisting of the parsed value,  and the index of
+the next token to be parsed. Not all parse functions return a tuple;
 this is inconsistent, but the tuple unpacking clutters up code.
 
 Parsing methods are also where exceptions are thrown in case of malformed input.
 '''
 
-
-'''
-A flexible matching tool for doing simple checks.
-'''
 def match_generic(token: str, target: str) -> bool:
+    '''A flexible matching tool for doing simple checks.
+    
+    This is arguably pointless, but I think it makes the code somewhat
+    cleaner.
+    '''
     return token == target
-
-'''
-Checks that a name is correctly formatted: that it is surrounded by quotation  marks,
-and that it is not an empty string.
-'''
-def match_name(token: str) -> str:
-    return token[0] == "\"" and token[-1] == "\"" and len(token) > 2
-
 
 def match_colon(token: str) -> bool:
     return token == ":"
+
+def match_name(token: str) -> str:
+    '''Checks that a key is correctly formatted
+    '''
+    return token[0] == "\"" and token[-1] == "\"" and len(token) > 2
 
 def parse_name(token: str) -> str:
     if token[0] == "\"" and token[-1] == "\"" and len(token) > 2:
@@ -197,14 +203,12 @@ def parse_name(token: str) -> str:
 def match_dict(token: str) -> bool:
     return match_generic(token, "{")
 
-'''
-Given the index of the first content token in a dictionary, parses that dictionary
-and it's contents.
 
-Represents S from the grammar
-'''
 def parse_dict(tokenized: list, i: int) -> tuple:
-    
+    '''Recursively parses a set of key-value pairs
+
+    Represents S from the grammar
+    '''
     new_dict = {}
 
     parsed_result = parse_entries(tokenized, new_dict, i)
@@ -220,14 +224,14 @@ def match_comma(token: str) -> bool:
     return match_generic(token, ",")
 
 
-
-'''
-Unlike the other types, a set requires two tokens of look-ahead: one to check that
-the value is of the allowed types (int, float, boolean, string), and a second to to
-check that the token after the value is not a colon, which would indicate a key-value
-pair.
-'''
 def match_set(tokenized: list, i: int) -> bool:
+    '''Checks that a token represents the start of a set.
+
+    Unlike the other types, a set requires two tokens of look-ahead: 
+    one to check that the value is of the allowed types (int, float, 
+    boolean, string), and a second to to check that the token after the 
+    value is not a colon, which would indicate a key-value pair.
+    '''
     if (match_generic(tokenized[i], "{")
         and match_primitive(tokenized[i+1])
         and not match_colon(tokenized[i+2])):
@@ -236,15 +240,16 @@ def match_set(tokenized: list, i: int) -> bool:
         return False
 
 
-'''
-Because sets cannot contain multi-token structures, stuff
 
-The structure of the code is extremely similar to parse_list(). I wonder if there is
-some way to use this similarity to economize on code?
-
-Represent Set from the grammar.
-'''
 def parse_set(tokenized: list, i: int) -> tuple:
+    '''Parses from the first value of a set, to its end.
+
+    The structure of the code is extremely similar to parse_list(). I 
+    wonder if there is some way to use this similarity to economize on 
+    code?
+
+    Represent Set from the grammar.
+    '''
     new_set = set()
 
     if tokenized[i] == ")":
@@ -266,17 +271,17 @@ def parse_set(tokenized: list, i: int) -> tuple:
     raise Exception("Set is not closed with a \"]\".") 
 
 
-'''
-Any content wrapped in quotation marks can be a String.
-'''
+
 def match_string(token: str) -> bool:
+    '''Any content wrapped in quotation marks can be a String.
+    '''
     if token[0] == "\"" and token[-1] == "\"":
         return True
     
-'''
-Represents String from the grammar.
-'''
+
 def parse_string(token: str) -> str:
+    '''Represents String from the grammar.
+    '''
     if token == "\"\"":
         return ""
     else:
@@ -286,12 +291,12 @@ def parse_string(token: str) -> str:
 def match_list(token) -> list:
     return match_generic(token, "[")
     
-'''
-Given the index of the first content token in a list, parses that list and it's contents.
 
-Represents L from the grammar.
-'''
 def parse_list(tokenized: list, i: int) -> tuple:
+    ''' Parses from the first value of a list, to its end.
+
+    Represents L from the grammar.
+    '''
     new_list = []
 
     #if the list is empty
@@ -328,30 +333,22 @@ def match_complex(token: str) -> bool:
     if token[-1] == "i":
         return True
 
-'''
-Start at the right (or maybe index 1)
-go left until you find a non-number, non-decimal
-    -if it's + || -, this is the end of the first number
-    -if it's e, go ahead one, then keep going right until you find + || -
-    that point, to the left, is your second term
 
-    Nope!!! :33
-'''
 def parse_complex(token: str) -> complex:
     if token.find(" ") != -1:
         raise Exception("Imaginary numbers must not contain spaces")
-    '''
-    token[:-1].append("j")
-    print(complex(token))
-    '''
+
     return complex(token.replace("i","j"))
 
-'''
-Initially I wanted to independently code this, but I decided that I was better off 
-relying on Python's in-built type compatibility checking, rather than jury-rigging 
-my own. Besides - isn't "ask forgiveness, not permission" a think in Pyhon style?
-'''
+
 def match_num(token: str) -> bool:
+    '''Returns a string as a number, if possible.
+
+    Initially I wanted to independently code this, but I decided that I
+    was better off  relying on Python's in-built type compatibility 
+    checking, rather than jury-rigging my own. Besides - "ask 
+    forgiveness, not permission"!
+    '''
     try:
         int(token)
         return True
@@ -362,12 +359,13 @@ def match_num(token: str) -> bool:
         except:
             return False
     
-'''
-Takes a string number as input, and returns it as an into or a float.
 
-Can be handled through string analysis, but this seemed more reliable.
-'''
 def parse_num(token: str):
+    '''Takes a string number as input, and returns it as a number.
+
+    This could have been handled through string analysis, 
+    but this seemed more reliable.
+    '''
     try:
         return int(token) 
     except:
@@ -386,18 +384,17 @@ def match_primitive(token: str) -> bool:
     else:
         return False       
 
-'''
-Takes a given value (not key) token, formed as a string, as input, and returns
-it it's proper data type.
 
-The order of the if-statements could be important, since a boolean "true" or "false"
-could be read as a string - as could any number. This shouldn't matter, since my string
-matching relies on the presence of quoation marks, which shouldn't be present in numbers
-or booleans.
-
-Represents D from the grammar
-'''
 def parse_value(tokenized: list, i: int):
+    '''Given a string token, parses it to a dictionary value
+
+    The order of the if-statements could be important, since a boolean "true" or "false"
+    could be read as a string - as could any number. This shouldn't matter, since my string
+    matching relies on the presence of quoation marks, which shouldn't be present in numbers
+    or booleans.
+
+    Represents D from the grammar
+    '''
     token = tokenized[i]
     value = None
 
@@ -432,10 +429,10 @@ def parse_value(tokenized: list, i: int):
     
     return (value, i)
 
-'''
-Parses all the entries at a given level of dictionary.
-'''
+
 def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
+    '''Parses all the entries at a given level of dictionary.
+    '''
     while tokenized[i] != "}":
         #Checks for a name and ":"
         key = parse_name(tokenized[i])
@@ -458,11 +455,13 @@ def parse_entries(tokenized: list, parsed: dict, i: int) -> tuple:
         
     return (parsed, i)
 
-'''
-For convenience, we make the top-level dictionary here, and pass it into the rest of the
-code.
-'''
+
 def parse_file(file_name: str) -> dict:
+    '''given file name, deserializes into a content dictionary
+
+    For convenience, we make the top-level dictionary here, and 
+    pass it into the rest of the code.
+    '''
     with open(file_name) as file:
         content = file.read()
 
@@ -476,7 +475,7 @@ def parse_file(file_name: str) -> dict:
 
 
 def run_tests(test_files: list) -> str:
-    TEST_DATA_LOCATION = "test_data"
+    TEST_DATA_LOCATION = "test_data/complex_set_tests"
     for test in test_files:
         try:
             path = os.path.join(TEST_DATA_LOCATION, test)
@@ -485,16 +484,16 @@ def run_tests(test_files: list) -> str:
         except:
             raise Exception("Failed on file " + test)
 
-'''
-Proccesses command line input, and prints the final product.
 
-This has two modes: "command line" and "mass test". The former requires a command line
-parameter, consisting of thena me of the input file. The latter will instead run the
-parser on all files in the designated directory - which directory is hardcoded in
-run_tests() as TEST_DATA_LOCATION.
-'''
 def main():
-    mode = "command line"
+    '''Proccesses command line input, and prints the final product.
+
+    This has two modes: "command line" and "mass test". The former requires a command line
+    parameter, consisting of thena me of the input file. The latter will instead run the
+    parser on all files in the designated directory - which directory is hardcoded in
+    run_tests() as TEST_DATA_LOCATION.
+    '''
+    mode = "mass test"
 
     if mode == "command line":
         ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
@@ -511,7 +510,7 @@ def main():
         print(dictionary)
 
     elif mode == "mass test":
-        dir_list = os.listdir("test_data/")
+        dir_list = os.listdir("test_data/complex_set_tests")
         run_tests(dir_list)
 
 
