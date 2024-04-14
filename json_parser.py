@@ -60,10 +60,11 @@ def is_divider(char: str) -> bool:
         "," : True
     }
 
-    if char in single_char_dict:
+    return char in single_char_dict
+    '''if char in single_char_dict:
         return True
     else:
-        return False
+        return False'''
     
 
 def is_number(char: str) -> bool:
@@ -91,10 +92,11 @@ def is_number(char: str) -> bool:
         "+" : True
     }
 
-    if char in num_dict:
+    return char in num_dict
+    '''if char in num_dict:
         return True
     else:
-        return False
+        return False'''
 
 
 def find_end(content: str) -> int:
@@ -475,7 +477,7 @@ def parse_file(file_name: str) -> dict:
 
 
 def run_tests(test_files: list) -> str:
-    TEST_DATA_LOCATION = "test_data/complex_set_tests"
+    TEST_DATA_LOCATION = "test_data/base_tests"
     for test in test_files:
         try:
             path = os.path.join(TEST_DATA_LOCATION, test)
@@ -510,7 +512,7 @@ def main():
         print(dictionary)
 
     elif mode == "mass test":
-        dir_list = os.listdir("test_data/complex_set_tests")
+        dir_list = os.listdir("test_data/base_tests")
         run_tests(dir_list)
 
 
