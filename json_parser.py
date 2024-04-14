@@ -119,7 +119,7 @@ def find_end(content: str) -> int:
         return 5
     else:
         raise RuntimeError
-           
+
 
 def tokenize(content: str) -> list:
     i = 0
