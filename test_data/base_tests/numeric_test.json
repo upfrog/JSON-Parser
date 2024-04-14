@@ -1,21 +1,21 @@
 {
     "name" : "Robin",
-    "age" : 29,
+    "age" : .29,
     "hobbies" : [
         "stealing",
         "archery",
         "philanthropy"
     ],
     "is_handsome" : true,
-    "exponental_notation" : +6.022e+23,
+    "exponental_notation" : 6.022e+23,
     "number_list" : [
         3.14159,
-        .227,
+        0.227,
         42
     ],
     "exp_number_list" : [
-         +6.022e-23,
-         +6.022e23,
+         6.022e-23,
+         6.022e23,
          -6.022e+23,
          -6.022e-23,
          -6.022e23,

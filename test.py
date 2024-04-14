@@ -1,30 +1,48 @@
 '''
 This is somewhat overpowered for the task at hand, but I wanted to learn a more scaleable way of
 organizing test.
+
+
+My ability to easily test this is severely
 '''
 from json_parser import parse_file
 
 import unittest
 import json
 import os
+import sys
 
 
 class TestParser(unittest.TestCase):
     
     def test_stuff(self):
-        file_name = "test_data\\easy_test.json"
+        test_files = os.listdir("test_data/base_tests")
+        TEST_DATA_LOCATION =  "test_data/base_tests"
         
-        local_dir = os.path.dirname(__file__)
-        print(local_dir)
-        file_path = os.path.join(local_dir, file_name)
-        #dictionary = parse_file(file_path)
-        print(file_path)
-        with open(file_path) as file:
-            content = file.read()
-        true_dict = json.loads(content)
 
-        print(true_dict)
+    
 
+        for test in test_files:
+            try:
+                cur_directory = os.path.dirname(__file__)
+                test_path = os.path.join(TEST_DATA_LOCATION, test)
+                print(cur_directory)
+                print(test_path)
+
+
+                test_path = os.path.join(cur_directory,test_path)
+                print(test_path)
+                
+                with open(str(test_path)) as input:
+                    content = input.read()
+                    unknown_parse = parse_file(str(test_path))
+                    known_parse = json.loads(content)
+
+                #self.assertEqual(unknown_parse, known_parse)
+                print("\n\n=====================================================\n\n")
+            except:
+                raise Exception("Failed on file " + test)
+        
 
         
         

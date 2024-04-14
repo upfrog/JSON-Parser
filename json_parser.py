@@ -489,7 +489,7 @@ def run_tests(test_files: list) -> str:
 Proccesses command line input, and prints the final product.
 
 This has two modes: "command line" and "mass test". The former requires a command line
-parameter, consisting of the name of the input file. The latter will instead run the
+parameter, consisting of thena me of the input file. The latter will instead run the
 parser on all files in the designated directory - which directory is hardcoded in
 run_tests() as TEST_DATA_LOCATION.
 '''
