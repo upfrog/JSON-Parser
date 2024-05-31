@@ -1,4 +1,4 @@
-A homebrew JSON parser which extends standard JSON with sets and complex numbers.
+A recursive descent JSON parser which extends standard JSON with sets and complex numbers.
 
 This has several further deviations from the official JSON standard. The deviations I have found include:
   1. My parser can handle fractional numbers without a leading zero (eg .2)
