@@ -1,14 +1,11 @@
-
-
 DESCRIPTION = '''
-A homebrew JSON parser which extends standard JSON with sets and complex
-numbers.
+A recursive-descent JSON parser, which extends standard JSON with sets 
+and complex numbers.
 '''
 
 import argparse
 import os.path
 
-YOUR_NAME_HERE = "Stephen Rout" 
 
 '''
 GRAMMAR:
@@ -105,7 +102,7 @@ def find_end(content: str) -> int:
     elif is_number(content[0]):
         j = 0
         while j < len(content):
-            if content[j]  == "," or content[j] == "}" or content[j] == "]" or content[j] == "\n":
+            if content[j] in [",", "}", "]", "\n"]:
                 return j
             else:
                 j += 1
@@ -469,57 +466,22 @@ def parse_file(file_name: str) -> dict:
         raise Exception("Input does not start with a \"{\".")
 
 
-def run_tests(test_files: list) -> str:
-    '''A better way to run tests.
-
-    This was the first way I devised. I later decided that I should use
-    a proper unit testing framework, but frankly I'm not sure that the
-    change was at all beneficial.
-
-    The tests in test.py are bloated, and highly repetitve compared to
-    this. That said, I think that PyTest might be able to resolve
-    this issue.
-
-    This needs modification to fit the new test_data directory 
-    structure.
-    '''
-    TEST_DATA_LOCATION = "test_data/complex_set_tests"
-    for test in test_files:
-        try:
-            path = os.path.join(TEST_DATA_LOCATION, test)
-            print(parse_file(path))
-            print("\n\n==================================================\n\n")
-        except:
-            raise Exception("Failed on file " + test)
-
-
 def main():
     '''Proccesses command line input, and prints the final product.
-
-    This has two modes: "command line" and "mass test". The former requires a command line
-    parameter, consisting of thena me of the input file. The latter will instead run the
-    parser on all files in the designated directory - which directory is hardcoded in
-    run_tests() as TEST_DATA_LOCATION.
     '''
-    mode = "command line"
 
-    if mode == "command line":
-        ap = argparse.ArgumentParser(description=(DESCRIPTION + f"\nBy: {YOUR_NAME_HERE}"))
-        ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
-        args = ap.parse_args()
-        
-        file_name = args.file_name
-        local_dir = os.path.dirname(__file__)
-        file_path = os.path.join(local_dir, file_name)
+    ap = argparse.ArgumentParser(description=(DESCRIPTION))
+    ap.add_argument('file_name', action='store', help='Name of the JSON file to read.')
+    args = ap.parse_args()
+    
+    file_name = args.file_name
+    local_dir = os.path.dirname(__file__)
+    file_path = os.path.join(local_dir, file_name)
 
-        dictionary = parse_file(file_path)
+    dictionary = parse_file(file_path)
 
-        print('DICTIONARY:')
-        print(dictionary)
-
-    elif mode == "mass test":
-        dir_list = os.listdir("test_data/complex_set_tests")
-        run_tests(dir_list)
+    print('DICTIONARY:')
+    print(dictionary) 
 
 
 if __name__ == '__main__':

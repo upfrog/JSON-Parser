@@ -3,6 +3,10 @@ These tests are not great, as there is a great deal of boilerplate, and
 Python's inbuilt JSON module cannot handle many of my test files, 
 meaning that my tests are quite short on rigor.
 
+Files which are beyond Python's JSON parser's capability are printed.
+While visual inspection is a poor way to verify the tests, the program
+will at least crash if the dictionary was built improperly.
+
 This would also benefit from some added tests for exceptions.
 '''
 from json_parser import parse_file
@@ -33,10 +37,6 @@ class TestParser(unittest.TestCase):
 
     def test_sets(self):
         '''Tests files containing the set extension.
-
-        Because the in-built python JSON module does handle set, I print
-        the results. There is probably a JSON tool which can handle this
-        for me, but I don't know what it is at the moment.
         '''
         TEST_DATA_LOCATION =  "test_data/set_tests"
         test_directory = os.path.join(self.wd, TEST_DATA_LOCATION)
@@ -51,11 +51,7 @@ class TestParser(unittest.TestCase):
                 print("===========================")
             
     def test_complex(self):
-        '''Tests files containing the set extension.
-
-        Because the in-built python JSON module does handle set, I print
-        the results. There is probably a JSON tool which can handle this
-        for me, but I don't know what it is at the moment.
+        '''Tests files containing the complex number extension.
         '''
         TEST_DATA_LOCATION =  "test_data/complex_tests"
         test_directory = os.path.join(self.wd, TEST_DATA_LOCATION)
@@ -70,11 +66,7 @@ class TestParser(unittest.TestCase):
                 print("===========================")
 
     def test_complex_sets(self):
-        '''Tests files containing the set extension.
-
-        Because the in-built python JSON module does handle set, I print
-        the results. There is probably a JSON tool which can handle this
-        for me, but I don't know what it is at the moment.
+        '''Tests files containing the complex set extension.
         '''
         TEST_DATA_LOCATION =  "test_data/complex_set_tests"
         test_directory = os.path.join(self.wd, TEST_DATA_LOCATION)
